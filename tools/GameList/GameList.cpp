@@ -14,13 +14,11 @@
 
 #include "AtgXmlFileParser.h"
 
-
-ATG::XmlFileParser m_parser;
+GameList m_GameList;
 int curSel = 0;
 int curPage = 1;			// add:当前页 date:2009-11-18 by:chengang
 int pageSize = 0;			// add:页显示个数 date:2009-11-18 by:chengang
 int countPages = 1;			// add:总页数 date:2009-11-18 by:chengang
-
 
 LPSTR UnicodeToAnsi(LPCWSTR s)
 {
@@ -58,17 +56,121 @@ void wtoc(CHAR* Dest, const WCHAR* Source)
 	Dest[i] = '\0';
 }
 
-VOID LoadGameList(VOID)
+/**--------------------------------------------------------------------------------------
+ * getGameTitle - 游戏文件说明
+ * @lpFileName: 游戏说明文件
+ * @lpGameName: 游戏名
+ *
+ *文件目录结构：
+ *				default.txt 游戏文件说明（如果不存在，直接使用目录名）
+ * Returns：成功标志
+ * Author：GooHome
+ * History：2009/12/12 初版做成
+ --------------------------------------------------------------------------------------*/
+bool getGameTitle(char* lpFileName,char* lpGameName)
 {
-	ATG::XMLParser parser;
-    parser.RegisterSAXCallbackInterface( &m_parser );
+		HANDLE hFile = CreateFile(lpFileName,
+									GENERIC_READ,
+									FILE_SHARE_READ, 
+									NULL, OPEN_EXISTING,
+									FILE_FLAG_SEQUENTIAL_SCAN, NULL );
 
-    HRESULT hr = parser.ParseXMLFile( "game:\\GameList.xml" );
+		DWORD nBytesToRead=40;
+		DWORD nBytesRead=40,dwError;
+		char lpBuffer[50]="";//文件读取的内容 
+		bool bReturn=false;
 
-    if( SUCCEEDED( hr ) )
+		if (hFile != INVALID_HANDLE_VALUE)
+		{		
+			int bResult = ReadFile(hFile, lpBuffer, nBytesToRead, &nBytesRead,NULL) ; 
+			if (bResult>0 && nBytesRead > 0) bReturn=true;
+			sprintf(lpGameName, "%s",lpBuffer);
+			CloseHandle(hFile);
+		}
+		return bReturn;
+}	
+
+/**--------------------------------------------------------------------------------------
+ * LoadGameList - 当前目录下的Hidden目录下的第一层目录加载都向量列表里
+ * @m_GameList: 游戏列表数组
+ *
+ *文件目录结构：default.xex 执行文件
+ *				default.txt 游戏文件说明（如果不存在，直接使用目录名）
+ *				default.png 游戏图片
+ * Returns：没有返回值（偷懒）
+ * Author：GooHome
+ * History：2009/12/12 初版做成
+ --------------------------------------------------------------------------------------*/
+VOID LoadGameList(GameList *m_GameList)
+{
+    char strFind[] = "game:\\hidden\\*";
+	char lpNewNameBuf[MAX_PATH];
+	char lpGameName[MAX_PATH];
+    WIN32_FIND_DATA wfd;
+    HANDLE hFind;
+
+	//清空游戏列表
+	m_GameList->empty();
+	// 开始查找第一个匹配的文件
+    hFind = FindFirstFile( strFind, &wfd );
+
+    if( INVALID_HANDLE_VALUE != hFind )
     {
-	}
+        // 循环找到所有的文件
+        do
+        {
+			if(FILE_ATTRIBUTE_DIRECTORY==wfd.dwFileAttributes){
+				memset(lpNewNameBuf, 0, MAX_PATH);
+				sprintf(lpNewNameBuf, "%s\\%s\\default.xex", "game:\\hidden",wfd.cFileName);
+				HANDLE hFile = CreateFile(lpNewNameBuf,    // file to open
+								   GENERIC_READ,           // open for reading
+								   FILE_SHARE_READ,        // share for reading
+								   NULL,                   // default security
+								   OPEN_EXISTING,          // existing file only
+								   FILE_FLAG_OVERLAPPED,   // overlapped operation
+								   NULL);                  // no attr. template
+			 
+				if (hFile != INVALID_HANDLE_VALUE)
+				{
+					//游戏节点信息
+					GameNode *pGlist;
+					pGlist=(GameNode *)malloc( sizeof(GameNode));
+					memset(pGlist, 0,  sizeof(GameNode));
+
+					memset(lpNewNameBuf, 0, MAX_PATH);
+					sprintf(lpNewNameBuf, "%s\\%s\\default.txt", "game:\\hidden",wfd.cFileName);
+					//游戏描述文件存在，读取信息
+					//界面显示乱码todo
+					if(getGameTitle(lpNewNameBuf,lpGameName)){
+						memset(lpNewNameBuf, 0, MAX_PATH);
+						sprintf(lpNewNameBuf, "%s",lpGameName);
+						mbstowcs(pGlist->strName,lpNewNameBuf,strlen(lpNewNameBuf));
+					}
+					else{
+						mbstowcs(pGlist->strName,wfd.cFileName,strlen(wfd.cFileName));
+					}					
+					//设置游戏图片
+					memset(lpNewNameBuf, 0, MAX_PATH);
+					sprintf(lpNewNameBuf, "%s\\%s\\default.png", "game:\\hidden",wfd.cFileName);
+					mbstowcs(pGlist->strImg,lpNewNameBuf,strlen(lpNewNameBuf));
+
+					//设置游戏执行文件
+					memset(lpNewNameBuf, 0, MAX_PATH);
+					sprintf(lpNewNameBuf, "%s\\%s\\default.xex", "game:\\hidden",wfd.cFileName);
+					mbstowcs(pGlist->strPath,lpNewNameBuf,strlen(lpNewNameBuf));
+
+					m_GameList->push_back(*pGlist);
+					CloseHandle(hFile);
+				}			
+			}
+
+        } while( FindNextFile( hFind, &wfd ) );
+
+        //关闭查找文件句柄
+        FindClose( hFind );
+    }
 }
+
 //--------------------------------------------------------------------------------------
 // Name: class CGameList
 // Desc: List implementation class.
@@ -88,7 +190,7 @@ class CLanguageList : public CXuiListImpl
     HRESULT OnGetItemCountAll( XUIMessageGetItemCount* pGetItemCountData, BOOL& bHandled )
     {
 		// edit:只绑定一页的数据 date:2009-11-18 by:chengang
-		int nCount = m_parser.m_GameList.size() - pageSize * (curPage - 1);
+		int nCount = m_GameList.size() - pageSize * (curPage - 1);
 		pGetItemCountData->cItems = nCount > pageSize ? pageSize : nCount;
         bHandled = TRUE;
         return S_OK;
@@ -102,7 +204,7 @@ class CLanguageList : public CXuiListImpl
         if( pGetSourceTextData->bItemData && pGetSourceTextData->iItem >= 0 )
         {
 			// edit:增加前面页数显示的个数 date:2009-11-18 by;chengang
-			pGetSourceTextData->szText = m_parser.m_GameList[pageSize * (curPage - 1) + pGetSourceTextData->iItem].strName;
+			pGetSourceTextData->szText = m_GameList[pageSize * (curPage - 1) + pGetSourceTextData->iItem].strName;
 			//pGetSourceTextData->szText = m_parser.m_GameList[pGetSourceTextData->iItem].strName;
             bHandled = TRUE;
         }
@@ -152,9 +254,14 @@ class CMyMainScene : public CXuiSceneImpl
 		GetChildById( L"labelPage", &m_Page );
 
 		// add:页显示个数、总页数进行赋值 date:2009-11-18 by:chengang
-		//pageSize = 12;//m_List.GetMaxLinesItemCount();	
-		countPages = (m_parser.m_GameList.size() * 1.0 / pageSize - m_parser.m_GameList.size() / pageSize) > 0 ? ( m_parser.m_GameList.size() / pageSize + 1) : ( m_parser.m_GameList.size() / pageSize);
-		swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", countPages,m_parser.m_GameList.size());
+		//pageSize = 12;//m_List.GetMaxLinesItemCount();
+		LoadGameList(&m_GameList);
+
+		//countPages = (m_parser.m_GameList.size() * 1.0 / pageSize - m_parser.m_GameList.size() / pageSize) > 0 ? ( m_parser.m_GameList.size() / pageSize + 1) : ( m_parser.m_GameList.size() / pageSize);
+		//swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", countPages,m_parser.m_GameList.size());
+
+		countPages = (m_GameList.size() * 1.0 / pageSize - m_GameList.size() / pageSize) > 0 ? ( m_GameList.size() / pageSize + 1) : ( m_GameList.size() / pageSize);
+		swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", countPages,m_GameList.size());
 		m_Page.SetText(wszPageText);
 
         return S_OK;
@@ -169,9 +276,9 @@ class CMyMainScene : public CXuiSceneImpl
         {
 			// edit:增加前面页数显示的个数 date:2009-11-18 by;chengang
             curSel = pageSize * (curPage - 1) + m_List.GetCurSel();
-			//curSel = m_List.GetCurSel();
-			m_Value.SetText( m_parser.m_GameList[curSel].strName );
-			m_GameImage.SetImagePath(m_parser.m_GameList[curSel].strImg);
+			curSel = m_List.GetCurSel();
+			m_Value.SetText( m_GameList[curSel].strName );
+			m_GameImage.SetImagePath(m_GameList[curSel].strImg);
             bHandled = TRUE;
         }
 
@@ -183,6 +290,12 @@ class CMyMainScene : public CXuiSceneImpl
 		bool isPage = false;
 		switch ( pInputData->dwKeyCode )
         {
+			// 重新加载游戏列表。
+            case VK_PAD_Y:
+            {
+				LoadGameList(&m_GameList);
+                break;
+            }
 			// 进入xna界面
             case VK_PAD_BACK:
             {
@@ -220,16 +333,16 @@ class CMyMainScene : public CXuiSceneImpl
 		// add:是否切换了页 date:2009-11-18 by:chengang
 		if(isPage)
 		{
-			swprintf(wszPageText, L"当前页： %d/%d  [共：%d]", curPage,countPages,m_parser.m_GameList.size());
+			swprintf(wszPageText, L"当前页： %d/%d  [共：%d]", curPage,countPages,m_GameList.size());
 			m_Page.SetText(wszPageText);
 			curSel = pageSize * (curPage - 1) + m_List.GetCurSel();
-			if(curSel > m_parser.m_GameList.size() - 1)
+			if(curSel > m_GameList.size() - 1)
 			{
-				curSel = m_parser.m_GameList.size() - 1;
+				curSel = m_GameList.size() - 1;
 				m_List.SetCurSel(curSel -  pageSize * (curPage - 1));
 			}
-			m_Value.SetText( m_parser.m_GameList[curSel].strName );
-			m_GameImage.SetImagePath(m_parser.m_GameList[curSel].strImg);
+			m_Value.SetText( m_GameList[curSel].strName );
+			m_GameImage.SetImagePath(m_GameList[curSel].strImg);
 			m_List.DeleteItems(0,m_List.GetItemCount());
 		}
 	}
@@ -237,7 +350,7 @@ class CMyMainScene : public CXuiSceneImpl
 
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
-		XLaunchNewImage( UnicodeToAnsi(m_parser.m_GameList[curSel].strPath), 0 );
+		XLaunchNewImage( UnicodeToAnsi(m_GameList[curSel].strPath), 0 );
 		return S_OK;
 	}
 
@@ -315,7 +428,7 @@ VOID __cdecl main()
         ATG::FatalError( "Failed to register default typeface.\n" );
 
     // 初始化游戏列表
-    LoadGameList();
+    //LoadGameList();
 
     // Load the skin file used for the scene.
     app.LoadSkin( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
