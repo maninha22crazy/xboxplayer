@@ -13,8 +13,15 @@
 
 
 #include "AtgXmlFileParser.h"
+#include <Xbdm.h>
+//#include <windows.h>
+#include "stdio.h"
 
+<<<<<<< .mine
+ATG::XmlFileParser m_parser;
+=======
 GameList m_GameList;
+>>>>>>> .r8
 int curSel = 0;
 int curPage = 1;			// add:当前页 date:2009-11-18 by:chengang
 int pageSize = 0;			// add:页显示个数 date:2009-11-18 by:chengang
@@ -350,8 +357,27 @@ class CMyMainScene : public CXuiSceneImpl
 
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
+<<<<<<< .mine
+HANDLE hFile = CreateFile( "", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+DWORD dwFileSize = GetFileSize( hFile, NULL );
+HANDLE hMapFile = CreateFileMapping( hFile, NULL, PAGE_READONLY, 0, dwFileSize, NULL );
+VOID* pSoundBankData = MapViewOfFile( hMapFile, FILE_MAP_READ, 0, 0, 0 );    
+HRESULT hr = pXACTEngine->CreateSoundBank( pSoundBankData, dwFileSize, 0, 0, &pSoundBank );
+
+
+
+		XLaunchNewImage( UnicodeToAnsi(m_parser.m_GameList[curSel].strPath), 0 );
+=======
 		XLaunchNewImage( UnicodeToAnsi(m_GameList[curSel].strPath), 0 );
+>>>>>>> .r8
 		return S_OK;
+		//DmMapDevkitDrive();  //这个调不调其实无所谓了，因为下面调的是DmRebootEx，对开发机来讲重启好后devkit就自动对laucher映射好了
+		//HRESULT rtValue = DmRebootEx(DMBOOT_TITLE,"devkit: " + UnicodeToAnsi(m_parser.m_GameList[curSel].strPath),"devkit:\\TalesOfVersperia","");
+		//if (rtValue == XBDM_NOERR)
+		//{
+		//	return S_OK;
+		//}
+		//return S_FALSE;
 	}
 
 public:
