@@ -490,7 +490,7 @@ VOID __cdecl main()
     //LoadGameList();
 
     // Load the skin file used for the scene.
-    app.LoadSkin( L"file://game:/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
+    app.LoadSkin( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
 
     // Load the scene.
 	XVIDEO_MODE VideoMode; 
@@ -501,17 +501,17 @@ VOID __cdecl main()
 	if(VideoMode.dwDisplayHeight <= 480)
 	{
 		pageSize = 10;
-		app.LoadFirstScene( L"file://game:/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", NULL );
+		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", NULL );
 	}
 	else if(VideoMode.dwDisplayHeight <= 720)
 	{
 		pageSize = 12;
-		app.LoadFirstScene( L"file://game:/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", NULL );
+		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", NULL );
 	}
 	else
 	{
 		pageSize = 20;
-		app.LoadFirstScene( L"file://game:/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", NULL );
+		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", NULL );
 	}
 
     app.Run();
