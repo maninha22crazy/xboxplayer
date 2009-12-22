@@ -13,15 +13,9 @@
 
 
 #include "AtgXmlFileParser.h"
-#include <Xbdm.h>
-//#include <windows.h>
-#include "stdio.h"
+#include "cc936.h"
 
-<<<<<<< .mine
-ATG::XmlFileParser m_parser;
-=======
 GameList m_GameList;
->>>>>>> .r8
 int curSel = 0;
 int curPage = 1;			// add:当前页 date:2009-11-18 by:chengang
 int pageSize = 0;			// add:页显示个数 date:2009-11-18 by:chengang
@@ -63,6 +57,60 @@ void wtoc(CHAR* Dest, const WCHAR* Source)
 	Dest[i] = '\0';
 }
 
+/**--------------------------------------------------------------------------------------
+ * ctow - 转换为中文Unicode 936
+ * @Dest: 转换后的字符串
+ * @Source: 原字符串
+ *
+ * Returns：空
+ * Author：eme
+ * History：2009/12/22 初版做成
+ --------------------------------------------------------------------------------------*/
+void ctow(WCHAR* Dest,const CHAR* Source)
+{
+    int i = 0, j = 0;
+    while(Source[j] != '\0')
+    {
+		// 判断是否中文
+		if(Source[j] < 0)
+		{
+			// 中文处理
+			Dest[i] = ff_convert(*((WCHAR*)Source),1);
+			Source +=2;
+		}
+		else
+		{
+			Dest[i] = *((CHAR*)Source);
+			Source ++;
+		}
+		++i;
+    }
+	Dest[i] = '\0';
+}
+
+int AsciiToUnicode(LPWSTR pDestinationData, LPSTR SourceStr)
+{
+ LPSTR pSourceData = SourceStr;
+ UINT giSourceCodePage;
+ giSourceCodePage = CP_ACP;  
+ DWORD gMBFlags = 0;
+ BOOL  gUsedDefaultChar = FALSE;
+ int nWCharNeeded;
+
+ nWCharNeeded = MultiByteToWideChar(giSourceCodePage, 
+  gMBFlags,
+  pSourceData, 
+  -1, 
+  NULL, 0 );
+ 
+ nWCharNeeded = MultiByteToWideChar(giSourceCodePage, 
+  gMBFlags,
+  pSourceData, 
+  -1,
+  (LPWSTR)pDestinationData, nWCharNeeded);
+
+ return nWCharNeeded;
+}
 /**--------------------------------------------------------------------------------------
  * getGameTitle - 游戏文件说明
  * @lpFileName: 游戏说明文件
@@ -154,7 +202,11 @@ VOID LoadGameList(GameList *m_GameList)
 						mbstowcs(pGlist->strName,lpNewNameBuf,strlen(lpNewNameBuf));
 					}
 					else{
-						mbstowcs(pGlist->strName,wfd.cFileName,strlen(wfd.cFileName));
+
+						// 支持中文Unicode
+						ctow(pGlist->strName,wfd.cFileName);
+
+						int dd = 0;
 					}					
 					//设置游戏图片
 					memset(lpNewNameBuf, 0, MAX_PATH);
@@ -357,27 +409,8 @@ class CMyMainScene : public CXuiSceneImpl
 
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
-<<<<<<< .mine
-HANDLE hFile = CreateFile( "", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
-DWORD dwFileSize = GetFileSize( hFile, NULL );
-HANDLE hMapFile = CreateFileMapping( hFile, NULL, PAGE_READONLY, 0, dwFileSize, NULL );
-VOID* pSoundBankData = MapViewOfFile( hMapFile, FILE_MAP_READ, 0, 0, 0 );    
-HRESULT hr = pXACTEngine->CreateSoundBank( pSoundBankData, dwFileSize, 0, 0, &pSoundBank );
-
-
-
-		XLaunchNewImage( UnicodeToAnsi(m_parser.m_GameList[curSel].strPath), 0 );
-=======
 		XLaunchNewImage( UnicodeToAnsi(m_GameList[curSel].strPath), 0 );
->>>>>>> .r8
 		return S_OK;
-		//DmMapDevkitDrive();  //这个调不调其实无所谓了，因为下面调的是DmRebootEx，对开发机来讲重启好后devkit就自动对laucher映射好了
-		//HRESULT rtValue = DmRebootEx(DMBOOT_TITLE,"devkit: " + UnicodeToAnsi(m_parser.m_GameList[curSel].strPath),"devkit:\\TalesOfVersperia","");
-		//if (rtValue == XBDM_NOERR)
-		//{
-		//	return S_OK;
-		//}
-		//return S_FALSE;
 	}
 
 public:
@@ -457,7 +490,7 @@ VOID __cdecl main()
     //LoadGameList();
 
     // Load the skin file used for the scene.
-    app.LoadSkin( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
+    app.LoadSkin( L"file://game:/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
 
     // Load the scene.
 	XVIDEO_MODE VideoMode; 
@@ -468,17 +501,17 @@ VOID __cdecl main()
 	if(VideoMode.dwDisplayHeight <= 480)
 	{
 		pageSize = 10;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", NULL );
+		app.LoadFirstScene( L"file://game:/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", NULL );
 	}
 	else if(VideoMode.dwDisplayHeight <= 720)
 	{
 		pageSize = 12;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", NULL );
+		app.LoadFirstScene( L"file://game:/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", NULL );
 	}
 	else
 	{
 		pageSize = 20;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", NULL );
+		app.LoadFirstScene( L"file://game:/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", NULL );
 	}
 
     app.Run();
