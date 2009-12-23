@@ -14,12 +14,22 @@
 
 #include "AtgXmlFileParser.h"
 #include "cc936.h"
+#include "..\DeviceMgrLib\DeviceMgrLib.h"
 
 GameList m_GameList;
 int curSel = 0;
 int curPage = 1;			// add:当前页 date:2009-11-18 by:chengang
 int pageSize = 0;			// add:页显示个数 date:2009-11-18 by:chengang
 int countPages = 1;			// add:总页数 date:2009-11-18 by:chengang
+
+
+char* m_curRoot = "";
+bool m_IsFat = false;
+UINT m_curDevice = DRIVE_DEVKIT;
+CXuiControl m_lbDevice;
+
+VOID LoadGameList(GameList *m_GameList);
+
 
 LPSTR UnicodeToAnsi(LPCWSTR s)
 {
@@ -45,72 +55,107 @@ LPSTR UnicodeToAnsi(LPCWSTR s)
 	return psz;
 }
 
-void wtoc(CHAR* Dest, const WCHAR* Source)
-{
-    int i = 0;
-
-    while(Source[i] != '\0')
-    {
-        Dest[i] = (CHAR)Source[i];
-        ++i;
-    }
-	Dest[i] = '\0';
-}
-
 /**--------------------------------------------------------------------------------------
- * ctow - 转换为中文Unicode 936
+ * Unicode2OEMCP - 转换为中文Unicode 936
  * @Dest: 转换后的字符串
  * @Source: 原字符串
  *
  * Returns：空
- * Author：eme
- * History：2009/12/22 初版做成
+ * Author：chengang
+ * History：2009/12/22
  --------------------------------------------------------------------------------------*/
-void ctow(WCHAR* Dest,const CHAR* Source)
+void Unicode2OEMCP(WCHAR* Dest,const CHAR* Source)
 {
     int i = 0, j = 0;
     while(Source[j] != '\0')
     {
-		// 判断是否中文
 		if(Source[j] < 0)
 		{
-			// 中文处理
-			Dest[i] = ff_convert(*((WCHAR*)Source),1);
-			Source +=2;
+			if(m_IsFat)
+			{
+				const char* utf8 = (CHAR*)&(Source[j]);
+				wchar_t unicode;
+				unicode = (utf8[0] & 0x1F) << 12;
+				unicode |= (utf8[1] & 0x3F) << 6;
+				unicode |= (utf8[2] & 0x3F);
+
+				Dest[i] = unicode;
+				j +=3;
+			}
+			else
+			{
+				Dest[i] = ff_convert(*((WCHAR*)&(Source[j])),1);
+				j +=2;
+			}
 		}
 		else
 		{
-			Dest[i] = *((CHAR*)Source);
-			Source ++;
+			Dest[i] = *((CHAR*)&(Source[j]));
+			j ++;
 		}
 		++i;
     }
 	Dest[i] = '\0';
 }
 
-int AsciiToUnicode(LPWSTR pDestinationData, LPSTR SourceStr)
+bool MountDevice(UINT DriveType)
 {
- LPSTR pSourceData = SourceStr;
- UINT giSourceCodePage;
- giSourceCodePage = CP_ACP;  
- DWORD gMBFlags = 0;
- BOOL  gUsedDefaultChar = FALSE;
- int nWCharNeeded;
+	// 挂载Lib支持的6个分区
+	DeviceMgrLib::MapExternalDrives();
 
- nWCharNeeded = MultiByteToWideChar(giSourceCodePage, 
-  gMBFlags,
-  pSourceData, 
-  -1, 
-  NULL, 0 );
- 
- nWCharNeeded = MultiByteToWideChar(giSourceCodePage, 
-  gMBFlags,
-  pSourceData, 
-  -1,
-  (LPWSTR)pDestinationData, nWCharNeeded);
+	bool isOk = false;
+	m_IsFat = false;
+	m_curDevice = DriveType;
+	switch(DriveType)
+	{
+		case DRIVE_USB0:
+			isOk = DeviceMgrLib::IsMounted_USB0();
+			m_curRoot = "Usb0";
+			m_lbDevice.SetText(L"Usb0");
+			m_IsFat = true;
+			break;
+		case DRIVE_USB1:
+			isOk = DeviceMgrLib::IsMounted_USB1();
+			m_curRoot = "Usb1";
+			m_lbDevice.SetText(L"Usb1");
+			m_IsFat = true;
+			break;
+		case DRIVE_USB2:
+			isOk = DeviceMgrLib::IsMounted_USB2();
+			m_curRoot = "Usb2";
+			m_lbDevice.SetText(L"Usb2");
+			m_IsFat = true;
+			break;
+		case DRIVE_DVD:
+			isOk = DeviceMgrLib::IsMounted_DVD();
+			m_curRoot = "Dvd";
+			m_lbDevice.SetText(L"Dvd");
+			break;
+		case DRIVE_FLASH:
+			isOk = DeviceMgrLib::IsMounted_FLASH();
+			m_curRoot = "Flash";
+			m_lbDevice.SetText(L"Flash");
+			break;
+		case DRIVE_HDD:
+			isOk = DeviceMgrLib::IsMounted_HDD();
+			m_curRoot = "Hdd";
+			m_lbDevice.SetText(L"Hdd");
+			break;
+		case DRIVE_DEVKIT:
+			isOk = DeviceMgrLib::IsMounted_HDD();
+			m_curRoot = "devkit";
+			m_lbDevice.SetText(L"devkit");
+			isOk = isOk && (S_OK == DmMapDevkitDrive());
+			break;
+	}
 
- return nWCharNeeded;
+	if(isOk)
+	{
+		LoadGameList(&m_GameList);
+	}
+	return isOk;
 }
+
 /**--------------------------------------------------------------------------------------
  * getGameTitle - 游戏文件说明
  * @lpFileName: 游戏说明文件
@@ -158,14 +203,19 @@ bool getGameTitle(char* lpFileName,char* lpGameName)
  --------------------------------------------------------------------------------------*/
 VOID LoadGameList(GameList *m_GameList)
 {
-    char strFind[] = "game:\\hidden\\*";
+    char strFind[MAX_PATH];
+	memset(strFind, 0, MAX_PATH);
+	sprintf(strFind, "%s:\\hidden\\*", m_curRoot);
+
+	//sprintf(strFind, "%s", "devkit:\\a\\*");
 	char lpNewNameBuf[MAX_PATH];
 	char lpGameName[MAX_PATH];
     WIN32_FIND_DATA wfd;
     HANDLE hFind;
 
 	//清空游戏列表
-	m_GameList->empty();
+	m_GameList->clear();
+	int n = m_GameList->size();
 	// 开始查找第一个匹配的文件
     hFind = FindFirstFile( strFind, &wfd );
 
@@ -176,7 +226,7 @@ VOID LoadGameList(GameList *m_GameList)
         {
 			if(FILE_ATTRIBUTE_DIRECTORY==wfd.dwFileAttributes){
 				memset(lpNewNameBuf, 0, MAX_PATH);
-				sprintf(lpNewNameBuf, "%s\\%s\\default.xex", "game:\\hidden",wfd.cFileName);
+				sprintf(lpNewNameBuf, "%s:\\hidden\\%s\\default.xex", m_curRoot,wfd.cFileName);
 				HANDLE hFile = CreateFile(lpNewNameBuf,    // file to open
 								   GENERIC_READ,           // open for reading
 								   FILE_SHARE_READ,        // share for reading
@@ -193,7 +243,7 @@ VOID LoadGameList(GameList *m_GameList)
 					memset(pGlist, 0,  sizeof(GameNode));
 
 					memset(lpNewNameBuf, 0, MAX_PATH);
-					sprintf(lpNewNameBuf, "%s\\%s\\default.txt", "game:\\hidden",wfd.cFileName);
+					sprintf(lpNewNameBuf, "%s:\\hidden\\%s\\default.txt", m_curRoot,wfd.cFileName);
 					//游戏描述文件存在，读取信息
 					//界面显示乱码todo
 					if(getGameTitle(lpNewNameBuf,lpGameName)){
@@ -202,21 +252,17 @@ VOID LoadGameList(GameList *m_GameList)
 						mbstowcs(pGlist->strName,lpNewNameBuf,strlen(lpNewNameBuf));
 					}
 					else{
-
 						// 支持中文Unicode
-						ctow(pGlist->strName,wfd.cFileName);
+						Unicode2OEMCP(pGlist->strName,wfd.cFileName);
+					}
 
-						int dd = 0;
-					}					
 					//设置游戏图片
-					memset(lpNewNameBuf, 0, MAX_PATH);
-					sprintf(lpNewNameBuf, "%s\\%s\\default.png", "game:\\hidden",wfd.cFileName);
-					mbstowcs(pGlist->strImg,lpNewNameBuf,strlen(lpNewNameBuf));
+					memset(pGlist->strImg, 0, MAX_PATH);
+					sprintf(pGlist->strImg, "file://%s:/hidden/%s/default.png", m_curRoot,wfd.cFileName);
 
 					//设置游戏执行文件
-					memset(lpNewNameBuf, 0, MAX_PATH);
-					sprintf(lpNewNameBuf, "%s\\%s\\default.xex", "game:\\hidden",wfd.cFileName);
-					mbstowcs(pGlist->strPath,lpNewNameBuf,strlen(lpNewNameBuf));
+					memset(pGlist->strPath, 0, MAX_PATH);
+					sprintf(pGlist->strPath, "%s:\\hidden\\%s\\default.xex", m_curRoot,wfd.cFileName);
 
 					m_GameList->push_back(*pGlist);
 					CloseHandle(hFile);
@@ -311,13 +357,11 @@ class CMyMainScene : public CXuiSceneImpl
         GetChildById( L"listGames", &m_List );
 		GetChildById( L"GameImage", &m_GameImage );
 		GetChildById( L"labelPage", &m_Page );
+		GetChildById( L"lbDevice", &m_lbDevice );
 
-		// add:页显示个数、总页数进行赋值 date:2009-11-18 by:chengang
-		//pageSize = 12;//m_List.GetMaxLinesItemCount();
-		LoadGameList(&m_GameList);
-
-		//countPages = (m_parser.m_GameList.size() * 1.0 / pageSize - m_parser.m_GameList.size() / pageSize) > 0 ? ( m_parser.m_GameList.size() / pageSize + 1) : ( m_parser.m_GameList.size() / pageSize);
-		//swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", countPages,m_parser.m_GameList.size());
+		// add:默认读取xdk硬盘 date:2009-12-23 by:chengang
+		MountDevice(m_curDevice);
+		//LoadGameList(&m_GameList);
 
 		countPages = (m_GameList.size() * 1.0 / pageSize - m_GameList.size() / pageSize) > 0 ? ( m_GameList.size() / pageSize + 1) : ( m_GameList.size() / pageSize);
 		swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", countPages,m_GameList.size());
@@ -337,7 +381,14 @@ class CMyMainScene : public CXuiSceneImpl
             curSel = pageSize * (curPage - 1) + m_List.GetCurSel();
 			curSel = m_List.GetCurSel();
 			m_Value.SetText( m_GameList[curSel].strName );
-			m_GameImage.SetImagePath(m_GameList[curSel].strImg);
+
+
+			// edit:设置图片 date:2009-12-23 by:chengang
+			WCHAR lpImgPathBuf[MAX_PATH];
+			memset(lpImgPathBuf, 0, MAX_PATH);
+			mbstowcs(lpImgPathBuf,m_GameList[curSel].strImg,strlen(m_GameList[curSel].strImg));
+			m_GameImage.SetImagePath(lpImgPathBuf);
+
             bHandled = TRUE;
         }
 
@@ -347,6 +398,7 @@ class CMyMainScene : public CXuiSceneImpl
 	HRESULT OnKeyDown(XUIMessageInput *pInputData,BOOL &bHandled)
 	{
 		bool isPage = false;
+		bool isChangeDevice = false;
 		switch ( pInputData->dwKeyCode )
         {
 			// 重新加载游戏列表。
@@ -387,6 +439,22 @@ class CMyMainScene : public CXuiSceneImpl
 				}
                 break;
             }
+			// 左切换（设备）
+			case VK_PAD_DPAD_LEFT:
+			{
+				m_curDevice = m_curDevice == DRIVE_DEVKIT ? DRIVE_HDD : m_curDevice - 1;
+				MountDevice(m_curDevice);
+				isChangeDevice = true;
+				break;
+			}
+			// 右切换（设备）
+			case VK_PAD_DPAD_RIGHT:
+			{
+				m_curDevice = m_curDevice == DRIVE_HDD ? DRIVE_DEVKIT : m_curDevice + 1;
+				MountDevice(m_curDevice);
+				isChangeDevice = true;
+				break;
+			}
         }
         
 		// add:是否切换了页 date:2009-11-18 by:chengang
@@ -401,15 +469,51 @@ class CMyMainScene : public CXuiSceneImpl
 				m_List.SetCurSel(curSel -  pageSize * (curPage - 1));
 			}
 			m_Value.SetText( m_GameList[curSel].strName );
-			m_GameImage.SetImagePath(m_GameList[curSel].strImg);
+
+			// edit:设置图片 date:2009-12-23 by:chengang
+			//m_GameImage.SetImagePath(m_GameList[curSel].strImg);
+			WCHAR lpImgPathBuf[MAX_PATH];
+			memset(lpImgPathBuf, 0, MAX_PATH);
+			mbstowcs(lpImgPathBuf,m_GameList[curSel].strImg,strlen(m_GameList[curSel].strImg));
+			m_GameImage.SetImagePath(lpImgPathBuf);
+
 			m_List.DeleteItems(0,m_List.GetItemCount());
+		}
+		else if(isChangeDevice)
+		{
+			curPage = 1;
+			swprintf(wszPageText, L"当前页： %d/%d  [共：%d]", curPage,countPages,m_GameList.size());
+			m_Page.SetText(wszPageText);
+			m_List.DeleteItems(0,m_List.GetItemCount());
+			curSel = 0;
+			int nCount = m_GameList.size();
+			if(nCount > 0)
+			{
+				m_Value.SetText( m_GameList[curSel].strName );
+
+				// add:设置图片 date:2009-12-23 by:chengang
+				WCHAR lpImgPathBuf[MAX_PATH];
+				memset(lpImgPathBuf, 0, MAX_PATH);
+				mbstowcs(lpImgPathBuf,m_GameList[curSel].strImg,strlen(m_GameList[curSel].strImg));
+				m_GameImage.SetImagePath(lpImgPathBuf);
+				nCount = nCount > pageSize ? pageSize : nCount;
+				m_List.InsertItems(0,nCount);
+				m_List.SetCurSel(curSel);
+			}
+			else
+			{
+				m_Value.SetText(L"");
+				m_GameImage.SetImagePath(L"");
+			}
 		}
 	}
 
 
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
-		XLaunchNewImage( UnicodeToAnsi(m_GameList[curSel].strPath), 0 );
+		// edit:使用SONIC3D封装的api date:2009-12-23 by:chengang
+		XLaunchNewImage( m_GameList[curSel].strPath, 0 );
+		//DeviceMgrLib::LaunchExternalImage(m_GameList[curSel].strPath,0);   // 无法运行？
 		return S_OK;
 	}
 

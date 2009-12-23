@@ -1,8 +1,25 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AtgFramework", "Common\AtgFramework2005.vcproj", "{91D208A6-9936-47FD-9659-67205C3EB0AB}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameList", "GameList.vcproj", "{652C7D60-BC02-4E09-96DD-930012345678}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB} = {EF4FE0BE-A51F-4506-9285-D8926C514EAB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeviceMgrLib", "DeviceMgrLib\DeviceMgrLib.vcproj", "{EF4FE0BE-A51F-4506-9285-D8926C514EAB}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +55,16 @@ Global
 		{652C7D60-BC02-4E09-96DD-930012345678}.Release_LTCG|Xbox 360.Build.0 = Release_LTCG|Xbox 360
 		{652C7D60-BC02-4E09-96DD-930012345678}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
 		{652C7D60-BC02-4E09-96DD-930012345678}.Release|Xbox 360.Build.0 = Release|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.CodeAnalysis|Xbox 360.ActiveCfg = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.CodeAnalysis|Xbox 360.Build.0 = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Debug|Xbox 360.ActiveCfg = Release|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Profile_FastCap|Xbox 360.ActiveCfg = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Profile_FastCap|Xbox 360.Build.0 = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Profile|Xbox 360.ActiveCfg = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Profile|Xbox 360.Build.0 = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Release_LTCG|Xbox 360.ActiveCfg = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Release_LTCG|Xbox 360.Build.0 = Release_LTCG|Xbox 360
+		{EF4FE0BE-A51F-4506-9285-D8926C514EAB}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -52,7 +52,7 @@
 #include <stdlib.h>
 #include "stdint.h"
 #include <stdarg.h>
-#include "mman.h"
+//#include "mman.h"
 #include "fcntl.h"
 #include <signal.h>
 #include <memory.h>

@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="GameList"
 	ProjectGUID="{652C7D60-BC02-4E09-96DD-930012345678}"
+	RootNamespace="GameList"
 	Keyword="XenonProj"
 	>
 	<Platforms>
@@ -56,6 +57,7 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				DebugInformationFormat="3"
+				TrapIntegerDivides="false"
 				CallAttributedProfiling="2"
 			/>
 			<Tool
@@ -88,9 +90,12 @@
 			/>
 			<Tool
 				Name="VCX360DeploymentTool"
+				ExcludedFromBuild="false"
 				RemoteRoot="xe:\Samples\$(ProjectName)"
 				DeploymentFiles="$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)\media;"
-				DeploymentType="1"
+				Progress="false"
+				ForceCopy="false"
+				DeploymentType="0"
 				EmulationType="0"
 			/>
 			<Tool
@@ -641,7 +646,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Build XUI project files"
-						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\DE-DE\XuiLocale_main.resx Media\xui\ES-ES\XuiLocale_main.resx Media\xui\FR-FR\XuiLocale_main.resx Media\xui\IT-IT\XuiLocale_main.resx Media\xui\JA-JP\XuiLocale_main.resx Media\xui\KO-KR\XuiLocale_main.resx Media\xui\PT-BR\XuiLocale_main.resx Media\xui\ZH-TW\XuiLocale_main.resx&#x0D;&#x0A;"
+						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\simple_scene_skin.xui Media\xui\XuiLocale_480.xui Media\xui\XuiLocale_720.xui Media\xui\XuiLocale_1080.xui Media\xui\ZH-TW\XuiLocale_main.resx&#x0D;&#x0A;"
 						Outputs="$(OutDir)\media\XuiLocale.xzp"
 					/>
 				</FileConfiguration>
@@ -703,6 +708,10 @@
 		</File>
 		<File
 			RelativePath=".\AtgXmlFileParser.h"
+			>
+		</File>
+		<File
+			RelativePath=".\cc936.h"
 			>
 		</File>
 		<File

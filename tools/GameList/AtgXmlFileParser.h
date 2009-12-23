@@ -16,8 +16,8 @@
 
 struct XMLElementAttribute
 {
-    WCHAR   strName[256];
-    WCHAR   strValue[256];
+    WCHAR   strName[MAX_PATH];
+    WCHAR   strValue[MAX_PATH];
     UINT    NameLen;
     UINT    ValueLen;
 };
@@ -25,9 +25,9 @@ typedef std::vector <XMLElementAttribute> XMLElementAttributeList;
 
 struct GameNode
 {
-    WCHAR   strName[256];
-    WCHAR   strPath[256];
-	WCHAR   strImg[256];
+    WCHAR   strName[MAX_PATH];
+    CHAR   strPath[MAX_PATH];
+	CHAR   strImg[MAX_PATH];
 };
 typedef std::vector <GameNode> GameList;
 
