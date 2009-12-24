@@ -13,6 +13,7 @@
 
 #include <vector>
 #include "AtgXmlParser.h"
+#include "Utility.h"
 
 struct XMLElementAttribute
 {
@@ -22,14 +23,6 @@ struct XMLElementAttribute
     UINT    ValueLen;
 };
 typedef std::vector <XMLElementAttribute> XMLElementAttributeList;
-
-struct GameNode
-{
-    WCHAR   strName[MAX_PATH];
-    CHAR   strPath[MAX_PATH];
-	CHAR   strImg[MAX_PATH];
-};
-typedef std::vector <GameNode> GameList;
 
 namespace ATG
 {

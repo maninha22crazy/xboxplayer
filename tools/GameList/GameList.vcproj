@@ -702,22 +702,42 @@
 				</FileConfiguration>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\AtgXmlFileParser.cpp"
+		<Filter
+			Name="Header Files"
 			>
-		</File>
-		<File
-			RelativePath=".\AtgXmlFileParser.h"
+			<File
+				RelativePath=".\AtgXmlFileParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cc936.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GameList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Utility.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Source Files"
 			>
-		</File>
-		<File
-			RelativePath=".\cc936.h"
-			>
-		</File>
-		<File
-			RelativePath=".\GameList.cpp"
-			>
-		</File>
+			<File
+				RelativePath=".\AtgXmlFileParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GameList.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Utility.cpp"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

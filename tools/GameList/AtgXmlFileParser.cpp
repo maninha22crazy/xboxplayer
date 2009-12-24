@@ -203,7 +203,7 @@ VOID XmlFileParser::CopyAttributes( const XMLAttribute* pAttributes, UINT uAttri
 		memset(node.strName,0,256); 
 		memset(node.strPath,0,256); 
 
-		//=======================================  edit:屏蔽了，修改为char类型 date:2009-12-23 by:chengang 屏蔽了，修改为char类型 begin ========================================
+		//=======================================  edit:屏蔽了，修改为char类型 date:2009-12-23 by:EME 屏蔽了，修改为char类型 begin ========================================
   //      wcsncpy_s( node.strName, pAttributes[0].strValue, pAttributes[0].ValueLen );
 		//wcsncpy_s( node.strPath, pAttributes[1].strValue, pAttributes[1].ValueLen  );
 
@@ -213,7 +213,7 @@ VOID XmlFileParser::CopyAttributes( const XMLAttribute* pAttributes, UINT uAttri
 		//	wcsncpy_s( node.strImg, pAttributes[2].strValue, pAttributes[2].ValueLen  );
 		//}
 
-		//=======================================  edit:屏蔽了，修改为char类型 date:2009-12-23 by:chengang end ========================================
+		//=======================================  edit:屏蔽了，修改为char类型 date:2009-12-23 by:EME end ========================================
 
 		m_GameList.push_back(node);
 	}
