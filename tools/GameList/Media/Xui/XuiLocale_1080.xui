@@ -245,6 +245,18 @@
 <InterItemSpacing>0.000000,10.000000,0.000000</InterItemSpacing>
 </Properties>
 </XuiListItem>
+<XuiListItem>
+<Properties>
+<Id>control_ListItem</Id>
+<Width>226.000000</Width>
+<Height>45.000000</Height>
+<Position>7.000000,22.000000,0.000000</Position>
+<Anchor>5</Anchor>
+<Show>false</Show>
+<Visual>XuiButton</Visual>
+<InterItemSpacing>0.000000,10.000000,0.000000</InterItemSpacing>
+</Properties>
+</XuiListItem>
 </XuiList>
 <XuiLabel>
 <Properties>
@@ -265,7 +277,7 @@
 <Position>30.034760,967.089844,0.000000</Position>
 <Scale>2.000000,2.000000,2.000000</Scale>
 <Anchor>16</Anchor>
-<Text>（按A进入游戏,左、右翻页,LB切换设备,BACK返回XDK,START进入 Dash）</Text>
+<Text>（按A进入游戏,左、右翻页,LB切换设备,X按时间排序,Y重刷列表,BACK返回XDK,START进入Dash）</Text>
 </Properties>
 </XuiLabel>
 <XuiImage>

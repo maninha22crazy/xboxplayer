@@ -14,8 +14,47 @@
 #include "Utility.h"
 #include "GameList.h"
 #include "..\DeviceMgrLib\DeviceMgrLib.h"
+#include <algorithm>
 
 using namespace std; 
+
+#define  COMPARE_LENGTH 20  //比较字符串长度为20字节
+//--------------------------------------------------------------------------------------
+// Name: lessGameName
+// Desc: 对游戏列表进行降序排列
+//--------------------------------------------------------------------------------------
+bool lessGameName(const GameNode& s1,const GameNode& s2) 
+{ 
+	return wmemcmp(s1.strName ,s2.strName, COMPARE_LENGTH) > 0; 
+}
+
+//--------------------------------------------------------------------------------------
+// Name: greaterGameName
+// Desc: 对游戏列表进行升序排列
+//--------------------------------------------------------------------------------------
+bool greaterGameName(const GameNode& s1,const GameNode& s2) 
+{ 
+	return wmemcmp(s1.strName,s2.strName, COMPARE_LENGTH) < 0; 
+} 
+
+//--------------------------------------------------------------------------------------
+// Name: lessCreateTime
+// Desc: 对游戏列表进行日期降序排列
+//--------------------------------------------------------------------------------------
+bool lessCreateTime(const GameNode& s1,const GameNode& s2) 
+{ 
+	return CompareFileTime(&(s1.ftCreationTime), &(s2.ftCreationTime)) == 1; 
+}
+
+//--------------------------------------------------------------------------------------
+// Name: greaterCreateTime
+// Desc: 对游戏列表进行日期升序排列
+//--------------------------------------------------------------------------------------
+bool greaterCreateTime(const GameNode& s1,const GameNode& s2) 
+{ 
+	return CompareFileTime(&(s1.ftCreationTime), &(s2.ftCreationTime)) == -1; 
+} 
+
 
 //--------------------------------------------------------------------------------------
 // Name: SortList
@@ -29,31 +68,27 @@ VOID SortList(GameList *m_GameList, UINT SortType)
 	}
 	if(SortType == 0)
 	{
-		for(vector <GameNode> ::iterator ix = m_GameList->begin() + 1; ix != m_GameList->end(); ++ix)  
-		{  
-			GameNode key = *ix;  
-			vector <GameNode> ::iterator iy = ix - 1;  
-			while(CompareFileTime(&((*iy).ftCreationTime),&(key.ftCreationTime) ) == (m_bSortLess ? 1: -1) )  
-			{  
-				*(iy+1) = *iy;  
-
-				if(iy == m_GameList->begin())
-				{
-					break;
-				}
-				iy --;  
-			}  
-			if(iy == m_GameList->begin())
-			{
-				*(iy) = key;
-			}
-			else
-			{
-				*(iy+1) = key;
-			}
+		if(m_bSortLess)
+		{
+			sort(m_GameList->begin(), m_GameList->end(),lessCreateTime);
 		}
-		m_bSortLess = !m_bSortLess;
+		else
+		{
+			sort(m_GameList->begin(), m_GameList->end(),greaterGameName);
+		}
 	}
+	else if(SortType == 1)
+	{
+		if(m_bSortLess)
+		{
+			sort(m_GameList->begin(), m_GameList->end(),lessGameName);
+		}
+		else
+		{
+			sort(m_GameList->begin(), m_GameList->end(),greaterGameName);
+		}
+	}
+	m_bSortLess = !m_bSortLess;
 }
 
 //--------------------------------------------------------------------------------------
@@ -236,8 +271,22 @@ class CLanguageList : public CXuiListImpl
     XUI_BEGIN_MSG_MAP()
         XUI_ON_XM_GET_SOURCE_TEXT( OnGetSourceText )
         XUI_ON_XM_GET_ITEMCOUNT_ALL( OnGetItemCountAll )
+		XUI_ON_XM_KEYDOWN( OnKeyDown ) 
     XUI_END_MSG_MAP()
 
+	HRESULT OnKeyDown(XUIMessageInput *pInputData,BOOL &bHandled)
+	{
+		bool isPage = false;
+		bool isChangeDevice = false;
+		switch ( pInputData->dwKeyCode )
+        {
+            case VK_PAD_Y:										// 重新加载游戏列表
+            {
+                break;
+            }
+		}
+		return S_OK;
+	}
 
     //----------------------------------------------------------------------------------
     // Returns the number of items in the list.
@@ -293,9 +342,7 @@ class CMyMainScene : public CXuiSceneImpl
         XUI_ON_XM_INIT( OnInit )
 		XUI_ON_XM_KEYDOWN( OnKeyDown ) 
         XUI_ON_XM_NOTIFY_SELCHANGED( OnNotifySelChanged )
-		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
     XUI_END_MSG_MAP()
-
 
     //----------------------------------------------------------------------------------
     // Performs initialization tasks - retrieves controls.
@@ -455,15 +502,6 @@ class CMyMainScene : public CXuiSceneImpl
 			}
 		}
 		bHandled = true;
-	}
-
-	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
-	{
-		// edit:使用SONIC3D封装的api date:2009-12-23 by:EME
-		//XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
-		DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
-		bHandled = true;
-		return S_OK;
 	}
 
 public:
