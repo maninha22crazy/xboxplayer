@@ -10,9 +10,12 @@
 #include <xuiapp.h>
 #include <AtgUtil.h>
 
+#include <vector>
 #include "Utility.h"
 #include "GameList.h"
 #include "..\DeviceMgrLib\DeviceMgrLib.h"
+
+using namespace std; 
 
 //--------------------------------------------------------------------------------------
 // Name: SortList
@@ -20,9 +23,36 @@
 //--------------------------------------------------------------------------------------
 VOID SortList(GameList *m_GameList, UINT SortType)
 {
+	if(m_GameList->size() == 0)
+	{
+		return;
+	}
 	if(SortType == 0)
 	{
+		for(vector <GameNode> ::iterator ix = m_GameList->begin() + 1; ix != m_GameList->end(); ++ix)  
+		{  
+			GameNode key = *ix;  
+			vector <GameNode> ::iterator iy = ix - 1;  
+			while(CompareFileTime(&((*iy).ftCreationTime),&(key.ftCreationTime) ) == (m_bSortLess ? 1: -1) )  
+			{  
+				*(iy+1) = *iy;  
 
+				if(iy == m_GameList->begin())
+				{
+					break;
+				}
+				iy --;  
+			}  
+			if(iy == m_GameList->begin())
+			{
+				*(iy) = key;
+			}
+			else
+			{
+				*(iy+1) = key;
+			}
+		}
+		m_bSortLess = !m_bSortLess;
 	}
 }
 
@@ -43,40 +73,40 @@ BOOL MountDevice(UINT DriveType)
 		case IDS_DRIVE_USB0:
 			isOk = DeviceMgrLib::IsMounted_USB0();
 			m_curRoot = "Usb0";
-			m_lbDevice.SetText(L"Usb0");
+			m_lbDevice.SetText(L"[Usb0]");
 			m_IsUtf8 = true;
 			break;
 		case IDS_DRIVE_USB1:
 			isOk = DeviceMgrLib::IsMounted_USB1();
 			m_curRoot = "Usb1";
-			m_lbDevice.SetText(L"Usb1");
+			m_lbDevice.SetText(L"[Usb1]");
 			m_IsUtf8 = true;
 			break;
 		case IDS_DRIVE_USB2:
 			isOk = DeviceMgrLib::IsMounted_USB2();
 			m_curRoot = "Usb2";
-			m_lbDevice.SetText(L"Usb2");
+			m_lbDevice.SetText(L"[Usb2]");
 			m_IsUtf8 = true;
 			break;
 		case IDS_DRIVE_DVD:
 			isOk = DeviceMgrLib::IsMounted_DVD();
 			m_curRoot = "Dvd";
-			m_lbDevice.SetText(L"Dvd");
+			m_lbDevice.SetText(L"[Dvd]");
 			break;
 		case IDS_DRIVE_FLASH:
 			isOk = DeviceMgrLib::IsMounted_FLASH();
 			m_curRoot = "Flash";
-			m_lbDevice.SetText(L"Flash");
+			m_lbDevice.SetText(L"[Flash]");
 			break;
 		case IDS_DRIVE_HDD:
 			isOk = DeviceMgrLib::IsMounted_HDD();
 			m_curRoot = "Hdd";
-			m_lbDevice.SetText(L"Hdd");
+			m_lbDevice.SetText(L"[Hdd]");
 			break;
 		case IDS_DRIVE_DEVKIT:
 			isOk = DeviceMgrLib::IsMounted_HDD();
 			m_curRoot = "Devkit";
-			m_lbDevice.SetText(L"Devkit");
+			m_lbDevice.SetText(L"[Devkit]");
 			//isOk = isOk && (S_OK == DmMapDevkitDrive());
 			break;
 	}
@@ -173,6 +203,9 @@ VOID LoadGameList(GameList *m_GameList)
 					{
 						ConvertFileName(pGlist->strName,wfd.cFileName,m_IsUtf8);
 					}
+					
+					// 设置创建时间
+					pGlist->ftCreationTime = wfd.ftCreationTime;
 
 					// 设置游戏图片
 					memset(pGlist->strImg, 0, MAX_PATH);
@@ -251,15 +284,16 @@ class CMyMainScene : public CXuiSceneImpl
 	CXuiControl m_Page;
     CXuiList m_List;
 	CXuiImageElement m_GameImage;
+	CXuiImageElement m_imgLogo;
 	WCHAR  wszPageText[100];
 
 
     // Message map. Here we tie messages to message handlers.
     XUI_BEGIN_MSG_MAP()
         XUI_ON_XM_INIT( OnInit )
+		XUI_ON_XM_KEYDOWN( OnKeyDown ) 
         XUI_ON_XM_NOTIFY_SELCHANGED( OnNotifySelChanged )
-        XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
-		XUI_ON_XM_KEYDOWN( OnKeyDown )
+		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
     XUI_END_MSG_MAP()
 
 
@@ -321,15 +355,19 @@ class CMyMainScene : public CXuiSceneImpl
 				isChangeDevice = true;						// 重新加载游戏列表跟切换设备一样的处理
                 break;
             }
-            case VK_PAD_BACK:									// 进入xna界面
+			case VK_PAD_START:									// 返回到DASH界面
             {
 				XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
                 break;
             }
-            case VK_PAD_B:										// 返回到xdk界面
+            case VK_PAD_BACK:									// 返回到xdk界面
             {
 				XLaunchNewImage( XLAUNCH_KEYWORD_DEFAULT_APP, 0 );
                 break;
+            }
+            case VK_PAD_B:										// 保留
+            {
+				break;
             }
 			case VK_PAD_LSHOULDER:								// 切换（设备）
             {
@@ -360,12 +398,12 @@ class CMyMainScene : public CXuiSceneImpl
 				}
                 break;
 			}
-			//case VK_PAD_X:										// 排序？
-			//{
-			//	SortList(&m_GameList,0);
-			//	isChangeDevice = true;		// 排序话跟切换设备一样的处理，重新刷新整个列表
-			//	break;
-			//}
+			case VK_PAD_X:										// 排序？
+			{
+				SortList(&m_GameList,0);
+				isChangeDevice = true;		// 排序话跟切换设备一样的处理，重新刷新整个列表
+				break;
+			}
         }
         
 		// add:是否切换了页 date:2009-11-18 by:EME
@@ -416,14 +454,15 @@ class CMyMainScene : public CXuiSceneImpl
 				m_GameImage.SetImagePath(L"");
 			}
 		}
+		bHandled = true;
 	}
-
 
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
 		// edit:使用SONIC3D封装的api date:2009-12-23 by:EME
 		//XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
 		DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
+		bHandled = true;
 		return S_OK;
 	}
 
@@ -527,4 +566,3 @@ VOID __cdecl main()
     app.Run();
     app.Uninit();
 }
-

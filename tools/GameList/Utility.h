@@ -32,6 +32,7 @@ struct GameNode
     WCHAR   strName[MAX_PATH];
     CHAR   strPath[MAX_PATH];
 	CHAR   strImg[MAX_PATH];
+	FILETIME ftCreationTime;
 };
 typedef std::vector <GameNode> GameList;
 
