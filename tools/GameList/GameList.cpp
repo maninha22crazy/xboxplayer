@@ -14,11 +14,22 @@
 #include "GameList.h"
 #include "..\DeviceMgrLib\DeviceMgrLib.h"
 
+//--------------------------------------------------------------------------------------
+// Name: SortList
+// Desc: 对游戏列表进行排序
+//--------------------------------------------------------------------------------------
+VOID SortList(GameList *m_GameList, UINT SortType)
+{
+	if(SortType == 0)
+	{
 
+	}
+}
 
-//
-//		挂载设备
-//
+//--------------------------------------------------------------------------------------
+// Name: MountDevice
+// Desc: 挂载设备
+//--------------------------------------------------------------------------------------
 BOOL MountDevice(UINT DriveType)
 {
 	// 挂载Lib支持的6个分区
@@ -64,9 +75,9 @@ BOOL MountDevice(UINT DriveType)
 			break;
 		case IDS_DRIVE_DEVKIT:
 			isOk = DeviceMgrLib::IsMounted_HDD();
-			m_curRoot = "devkit";
-			m_lbDevice.SetText(L"devkit");
-			isOk = isOk && (S_OK == DmMapDevkitDrive());
+			m_curRoot = "Devkit";
+			m_lbDevice.SetText(L"Devkit");
+			//isOk = isOk && (S_OK == DmMapDevkitDrive());
 			break;
 	}
 
@@ -78,9 +89,10 @@ BOOL MountDevice(UINT DriveType)
 }
 
 
-//
-//		游戏文件说明
-//
+//--------------------------------------------------------------------------------------
+// Name: getGameTitle
+// Desc: 游戏文件说明
+//--------------------------------------------------------------------------------------
 bool getGameTitle(char* lpFileName,char* lpGameName)
 {
 		HANDLE hFile = CreateFile(lpFileName,
@@ -91,7 +103,7 @@ bool getGameTitle(char* lpFileName,char* lpGameName)
 
 		DWORD nBytesToRead=40;
 		DWORD nBytesRead=40,dwError;
-		char lpBuffer[50]="";//文件读取的内容 
+		char lpBuffer[MAX_PATH] = "";
 		bool bReturn=false;
 
 		if (hFile != INVALID_HANDLE_VALUE)
@@ -104,9 +116,10 @@ bool getGameTitle(char* lpFileName,char* lpGameName)
 		return bReturn;
 }	
 
-//
-//		当前目录下的Hidden目录下的第一层目录加载都向量列表里
-//
+//--------------------------------------------------------------------------------------
+// Name: LoadGameList
+// Desc: 当前目录下的Hidden目录下的第一层目录加载都向量列表里
+//--------------------------------------------------------------------------------------
 VOID LoadGameList(GameList *m_GameList)
 {
     char strFind[MAX_PATH];
@@ -182,7 +195,7 @@ VOID LoadGameList(GameList *m_GameList)
 
 //--------------------------------------------------------------------------------------
 // Name: class CGameList
-// Desc: List implementation class.
+// Desc: List控件的模板类
 //--------------------------------------------------------------------------------------
 class CLanguageList : public CXuiListImpl
 {
@@ -229,7 +242,7 @@ public:
 
 //--------------------------------------------------------------------------------------
 // Name: class CMyMainScene
-// Desc: Scene implementation class.
+// Desc: 场景模板类
 //--------------------------------------------------------------------------------------
 class CMyMainScene : public CXuiSceneImpl
 {
@@ -281,7 +294,6 @@ class CMyMainScene : public CXuiSceneImpl
         {
 			// edit:增加前面页数显示的个数 date:2009-11-18 by;EME
 			m_nCurSel = m_nPageSize * (m_nCurPage - 1) + m_List.GetCurSel();
-			m_nCurSel = m_List.GetCurSel();
 			m_Value.SetText( m_GameList[m_nCurSel].strName );
 
 
@@ -306,6 +318,7 @@ class CMyMainScene : public CXuiSceneImpl
             case VK_PAD_Y:										// 重新加载游戏列表
             {
 				LoadGameList(&m_GameList);
+				isChangeDevice = true;						// 重新加载游戏列表跟切换设备一样的处理
                 break;
             }
             case VK_PAD_BACK:									// 进入xna界面
@@ -318,38 +331,41 @@ class CMyMainScene : public CXuiSceneImpl
 				XLaunchNewImage( XLAUNCH_KEYWORD_DEFAULT_APP, 0 );
                 break;
             }
-			case VK_PAD_LSHOULDER:								// 上页
+			case VK_PAD_LSHOULDER:								// 切换（设备）
             {
+				m_nCurDevice = m_nCurDevice == IDS_DRIVE_USB2 ? IDS_DRIVE_DEVKIT : m_nCurDevice + 1;
+				MountDevice(m_nCurDevice);
+				isChangeDevice = true;
+				break;
+            }
+			case VK_PAD_RSHOULDER:								// 留给XBLA
+            {
+
+            }
+			case VK_PAD_DPAD_LEFT:								// 上页
+			{
 				if(m_nCurPage > 1)
 				{
 					m_nCurPage--;
 					isPage = true;
 				}
                 break;
-            }
-			case VK_PAD_RSHOULDER:								// 下页
-            {
+			}
+			case VK_PAD_DPAD_RIGHT:								// 下页
+			{
 				if(m_nCurPage < m_nCountPage)
 				{
 					m_nCurPage++;
 					isPage = true;
 				}
                 break;
-            }
-			case VK_PAD_DPAD_LEFT:								// 左切换（设备）
-			{
-				m_nCurDevice = m_nCurDevice == IDS_DRIVE_DEVKIT ? IDS_DRIVE_HDD : m_nCurDevice - 1;
-				MountDevice(m_nCurDevice);
-				isChangeDevice = true;
-				break;
 			}
-			case VK_PAD_DPAD_RIGHT:								// 右切换（设备）
-			{
-				m_nCurDevice = m_nCurDevice == IDS_DRIVE_HDD ? IDS_DRIVE_DEVKIT : m_nCurDevice + 1;
-				MountDevice(m_nCurDevice);
-				isChangeDevice = true;
-				break;
-			}
+			//case VK_PAD_X:										// 排序？
+			//{
+			//	SortList(&m_GameList,0);
+			//	isChangeDevice = true;		// 排序话跟切换设备一样的处理，重新刷新整个列表
+			//	break;
+			//}
         }
         
 		// add:是否切换了页 date:2009-11-18 by:EME
@@ -406,8 +422,8 @@ class CMyMainScene : public CXuiSceneImpl
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
 		// edit:使用SONIC3D封装的api date:2009-12-23 by:EME
-		XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
-		//DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);   // 无法运行？
+		//XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
+		DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
 		return S_OK;
 	}
 
@@ -436,7 +452,7 @@ protected:
 
 //--------------------------------------------------------------------------------------
 // Name: RegisterXuiClasses()
-// Desc: Registers all the scene classes.
+// Desc: 注销全部的场景类
 //--------------------------------------------------------------------------------------
 HRESULT CMyApp::RegisterXuiClasses()
 {
@@ -455,7 +471,7 @@ HRESULT CMyApp::RegisterXuiClasses()
 
 //--------------------------------------------------------------------------------------
 // Name: UnregisterXuiClasses()
-// Desc: Unregisters all the scene classes.
+// Desc: 注销使用的场景
 //--------------------------------------------------------------------------------------
 HRESULT CMyApp::UnregisterXuiClasses()
 {
@@ -467,41 +483,37 @@ HRESULT CMyApp::UnregisterXuiClasses()
 
 //--------------------------------------------------------------------------------------
 // Name: main()
-// Desc: Application entry point.
+// Desc: 主函数，程序的入口处
 //--------------------------------------------------------------------------------------
 VOID __cdecl main()
 {
     // Declare an instance of the XUI framework application.
     CMyApp app;
 
-    // Initialize the application.    
+    // 初始化程序   
     HRESULT hr = app.Init( XuiD3DXTextureLoader );
     if( FAILED( hr ) )
         ATG::FatalError( "Failed intializing application.\n" );
 
-    // Register a default typeface
+    // 注册字体文件
     hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xarialuni.ttf" );
     if( FAILED( hr ) )
         ATG::FatalError( "Failed to register default typeface.\n" );
 
-    // 初始化游戏列表
-    //LoadGameList();
-
-    // Load the skin file used for the scene.
+    // 载入所用的皮肤文件
     app.LoadSkin( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
 
-    // Load the scene.
+    // 根据不同分辨率载入相应的场景文件.
 	XVIDEO_MODE VideoMode; 
 	XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
 	XGetVideoMode( &VideoMode );
 
-	// 不同分辨率选择不同的界面
-	if(VideoMode.dwDisplayHeight <= 480)
+	if(VideoMode.dwDisplayHeight < 720)
 	{
 		m_nPageSize = 10;
 		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", NULL );
 	}
-	else if(VideoMode.dwDisplayHeight <= 720)
+	else if(VideoMode.dwDisplayHeight < 1080)
 	{
 		m_nPageSize = 12;
 		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", NULL );
@@ -513,9 +525,6 @@ VOID __cdecl main()
 	}
 
     app.Run();
-
-
-    // Free resources, unregister custom classes, and exit.
     app.Uninit();
 }
 

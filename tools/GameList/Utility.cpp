@@ -2,9 +2,11 @@
 #include "Utility.h"
 #include "cc936.h"
 
-//
-//		Unicode转换Ansi
-//
+
+//--------------------------------------------------------------------------------------
+// Name: UnicodeToAnsi
+// Desc: Unicode转换Ansi
+//--------------------------------------------------------------------------------------
 LPSTR UnicodeToAnsi(LPCWSTR Dest)
 {
 	if (Dest == NULL) 
@@ -35,9 +37,10 @@ LPSTR UnicodeToAnsi(LPCWSTR Dest)
 }
 
 
-//
-//		转换文件名的编码问题
-//
+//--------------------------------------------------------------------------------------
+// Name: ConvertFileName
+// Desc: 转换文件名的编码问题
+//--------------------------------------------------------------------------------------
 void ConvertFileName(WCHAR* Dest,const CHAR* Source,bool isUtf8)
 {
     int i = 0, j = 0;

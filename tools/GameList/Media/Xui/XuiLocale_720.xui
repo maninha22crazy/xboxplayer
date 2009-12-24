@@ -33,9 +33,9 @@
 <XuiLabel>
 <Properties>
 <Id>labelValue</Id>
-<Width>239.398438</Width>
+<Width>550.438538</Width>
 <Height>28.000000</Height>
-<Position>249.607574,591.299988,0.000000</Position>
+<Position>48.468338,591.299988,0.000000</Position>
 </Properties>
 </XuiLabel>
 <XuiList>
@@ -47,6 +47,30 @@
 <Anchor>16</Anchor>
 <ClassOverride>LanguageList</ClassOverride>
 </Properties>
+<XuiListItem>
+<Properties>
+<Id>control_ListItem</Id>
+<Width>226.000000</Width>
+<Height>45.000000</Height>
+<Position>7.000000,22.000000,0.000000</Position>
+<Anchor>5</Anchor>
+<Show>false</Show>
+<Visual>XuiButton</Visual>
+<InterItemSpacing>0.000000,10.000000,0.000000</InterItemSpacing>
+</Properties>
+</XuiListItem>
+<XuiListItem>
+<Properties>
+<Id>control_ListItem</Id>
+<Width>226.000000</Width>
+<Height>45.000000</Height>
+<Position>7.000000,22.000000,0.000000</Position>
+<Anchor>5</Anchor>
+<Show>false</Show>
+<Visual>XuiButton</Visual>
+<InterItemSpacing>0.000000,10.000000,0.000000</InterItemSpacing>
+</Properties>
+</XuiListItem>
 <XuiListItem>
 <Properties>
 <Id>control_ListItem</Id>
@@ -182,10 +206,10 @@
 <Properties>
 <Id>labelGameTitle2</Id>
 <Width>553.580872</Width>
-<Height>35.603256</Height>
+<Height>53.021469</Height>
 <Position>69.798706,620.644043,0.000000</Position>
 <Anchor>48</Anchor>
-<Text>（按A进入游戏,LB、RB翻页,B返回XDK,BACK进入 Dashboard）</Text>
+<Text>（按A进入游戏,左、右翻页,LB切换设备,B返回XDK,BACK进入 Dashboard）</Text>
 </Properties>
 </XuiLabel>
 <XuiImage>

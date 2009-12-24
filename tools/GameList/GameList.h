@@ -73,4 +73,18 @@ bool getGameTitle(char* lpFileName,char* lpGameName);
 //========================================================================*/
 BOOL MountDevice(UINT DriveType);
 
+//*========================================================================//
+//	Name	:	SortList
+//  Desc	:	对游戏列表进行排序
+//	Param	: 
+//			SortType:	排序的类型:
+//										0	:	Unicode编码排序
+//										1	:	其他...
+//
+//	Return	:	true - 挂载成功;flase - 挂载失败
+//	Coder	:	EME
+//	Date	:	2009-12-24
+//========================================================================*/
+VOID SortList(GameList *m_GameList, UINT SortType);
+
 #endif
