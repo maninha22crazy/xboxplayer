@@ -322,7 +322,7 @@
 <NavRight>listGames</NavRight>
 <NavUp>listGames</NavUp>
 <NavDown>listGames</NavDown>
-<Text>（按A进入游戏,左、右翻页,LB切换设备,X按时间排序,Y重刷列表,BACK返回XDK,START进入Dash）</Text>
+<Text>（按A进入游戏,左、右翻页,LB切换设备,X按名称排序,Y重刷列表,BACK返回XDK,B进入Dash）</Text>
 </Properties>
 </XuiLabel>
 <XuiImage>

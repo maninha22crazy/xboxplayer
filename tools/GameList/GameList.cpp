@@ -271,22 +271,7 @@ class CLanguageList : public CXuiListImpl
     XUI_BEGIN_MSG_MAP()
         XUI_ON_XM_GET_SOURCE_TEXT( OnGetSourceText )
         XUI_ON_XM_GET_ITEMCOUNT_ALL( OnGetItemCountAll )
-		XUI_ON_XM_KEYDOWN( OnKeyDown ) 
     XUI_END_MSG_MAP()
-
-	HRESULT OnKeyDown(XUIMessageInput *pInputData,BOOL &bHandled)
-	{
-		bool isPage = false;
-		bool isChangeDevice = false;
-		switch ( pInputData->dwKeyCode )
-        {
-            case VK_PAD_Y:										// 重新加载游戏列表
-            {
-                break;
-            }
-		}
-		return S_OK;
-	}
 
     //----------------------------------------------------------------------------------
     // Returns the number of items in the list.
@@ -342,7 +327,9 @@ class CMyMainScene : public CXuiSceneImpl
         XUI_ON_XM_INIT( OnInit )
 		XUI_ON_XM_KEYDOWN( OnKeyDown ) 
         XUI_ON_XM_NOTIFY_SELCHANGED( OnNotifySelChanged )
+		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
     XUI_END_MSG_MAP()
+
 
     //----------------------------------------------------------------------------------
     // Performs initialization tasks - retrieves controls.
@@ -390,6 +377,14 @@ class CMyMainScene : public CXuiSceneImpl
         return S_OK;
     }
 
+	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
+	{
+		// edit:使用SONIC3D封装的api date:2009-12-23 by:EME
+		//XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
+		DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
+		return S_OK;
+	}
+
 	HRESULT OnKeyDown(XUIMessageInput *pInputData,BOOL &bHandled)
 	{
 		bool isPage = false;
@@ -402,19 +397,20 @@ class CMyMainScene : public CXuiSceneImpl
 				isChangeDevice = true;						// 重新加载游戏列表跟切换设备一样的处理
                 break;
             }
-			case VK_PAD_START:									// 返回到DASH界面
-            {
-				XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
-                break;
-            }
+			//case VK_PAD_START:									// 返回到DASH界面
+   //         {
+			//	XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
+   //             break;
+   //         }
             case VK_PAD_BACK:									// 返回到xdk界面
             {
 				XLaunchNewImage( XLAUNCH_KEYWORD_DEFAULT_APP, 0 );
                 break;
             }
-            case VK_PAD_B:										// 保留
+            case VK_PAD_B:										// 返回到DASH界面
             {
-				break;
+				XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
+                break;
             }
 			case VK_PAD_LSHOULDER:								// 切换（设备）
             {
@@ -447,7 +443,7 @@ class CMyMainScene : public CXuiSceneImpl
 			}
 			case VK_PAD_X:										// 排序？
 			{
-				SortList(&m_GameList,0);
+				SortList(&m_GameList,1);
 				isChangeDevice = true;		// 排序话跟切换设备一样的处理，重新刷新整个列表
 				break;
 			}
