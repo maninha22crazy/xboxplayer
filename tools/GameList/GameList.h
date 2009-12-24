@@ -10,8 +10,7 @@
 
 #include <xui.h>
 #include "Utility.h"
-
-
+#pragma warning(disable:4996) //安全警告全部关掉
 
 GameList m_GameList;
 INT m_nCurSel		= 0;				//	当前选中项
@@ -87,6 +86,6 @@ BOOL MountDevice(UINT DriveType);
 //	Coder	:	EME
 //	Date	:	2009-12-24
 //========================================================================*/
-VOID SortList(GameList *m_GameList, UINT SortType);
+VOID SortGameList(GameList *m_GameList, UINT SortType);
 
 #endif
