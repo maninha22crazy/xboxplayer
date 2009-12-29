@@ -8,17 +8,6 @@
 
 typedef DWORD MAPDRIVE_STATUS;
 
-enum
-{
-	DRIVE_DEVKIT	= 0,
-	DRIVE_USB0		= 1,
-	DRIVE_USB1		= 2,
-	DRIVE_USB2		= 3,
-	DRIVE_DVD		= 4,
-	DRIVE_FLASH		= 5,
-	DRIVE_HDD		= 6,
-};
-
 namespace DeviceMgrLib
 {
 	extern MAPDRIVE_STATUS dwMapState;

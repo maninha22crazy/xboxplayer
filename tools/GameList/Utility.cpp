@@ -1,7 +1,49 @@
 
 #include "Utility.h"
-#include "cc936.h"
+#include "cp932.h"
+#include "cp936.h"
+#include "cp949.h"
+#include "cp950.h"
 
+
+typedef WCHAR (*ff_convert) (WCHAR,UINT);
+typedef WCHAR (*ff_wtoupper) (WCHAR);
+
+struct iconv_table {
+	        const char		*name;
+	        WORD			codepage;
+	        ff_convert		convert;
+			ff_wtoupper		wtoupper;
+	      };
+
+static const struct iconv_table mappings[] = {
+	        { "CP932",  932,  CP932_ff_convert,  CP932_ff_wtoupper  },
+			{ "CP936",  936,  CP936_ff_convert,  CP936_ff_wtoupper  },
+			{ "CP949",  949,  CP949_ff_convert,  CP949_ff_wtoupper  },
+			{ "CP950",  950,  CP950_ff_convert,  CP950_ff_wtoupper  },
+			{ NULL,     0,    NULL,          NULL }
+			};
+
+static const struct iconv_table *curr_mapping = NULL;
+
+
+BOOL CP_Init(WORD cp)
+{
+  int i;
+ 
+  if (cp == 0)
+     cp = 936;
+  
+  for (i = 0; i < sizeof(mappings); i++)
+  {
+      if (cp == mappings[i].codepage)
+	  {
+         break;
+	  }
+  }
+  curr_mapping = mappings + i;
+  return (TRUE);
+}
 
 //--------------------------------------------------------------------------------------
 // Name: UnicodeToAnsi
@@ -63,7 +105,12 @@ void ConvertFileName(WCHAR* Dest,const CHAR* Source,bool isUtf8)
 			else
 			{
 				// 转换为中文Unicode 936
-				Dest[i] = ff_convert(*((WCHAR*)&(Source[j])),1);
+				//Dest[i] = CP936_ff_convert(*((WCHAR*)&(Source[j])),1);
+				if (!curr_mapping)
+				{
+			      CP_Init(936);
+				}
+				Dest[i] = (*curr_mapping->convert)(*((WCHAR*)&(Source[j])),1);
 				j +=2;
 			}
 		}

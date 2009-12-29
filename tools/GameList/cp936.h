@@ -9,7 +9,7 @@
 
 
 static
-const WCHAR uni2oem[] = {
+const WCHAR CP936_uni2oem[] = {
 /*  Unicode - OEM,  Unicode - OEM,  Unicode - OEM,  Unicode - OEM */
 	0x00A4, 0xA1E8, 0x00A7, 0xA1EC, 0x00A8, 0xA1A7, 0x00B0, 0xA1E3,
 	0x00B1, 0xA1C0, 0x00B7, 0xA1A4, 0x00D7, 0xA1C1, 0x00E0, 0xA8A4,
@@ -5463,7 +5463,7 @@ const WCHAR uni2oem[] = {
 };
 
 static
-const WCHAR oem2uni[] = {
+const WCHAR CP936_oem2uni[] = {
 /*	OEM - Unicode,  OEM - Unicode,  OEM - Unicode,  OEM - Unicode */
 	0x0080, 0x20AC, 0x8140, 0x4E02, 0x8141, 0x4E04, 0x8142, 0x4E05,
 	0x8143, 0x4E06, 0x8144, 0x4E0F, 0x8145, 0x4E12, 0x8146, 0x4E17,
@@ -10918,7 +10918,7 @@ const WCHAR oem2uni[] = {
 
 
 
-WCHAR ff_convert (	/* Converted code, 0 means conversion error */
+WCHAR CP936_ff_convert (	/* Converted code, 0 means conversion error */
 	WCHAR	src,	/* Character code to be converted */
 	UINT	dir		/* 0: Unicode to OEMCP, 1: OEMCP to Unicode */
 )
@@ -10932,11 +10932,11 @@ WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 		c = src;
 	} else {
 		if (dir) {		/* OEMCP to unicode */
-			p = oem2uni;
-			hi = sizeof(oem2uni) / 4 - 1;
+			p = CP936_oem2uni;
+			hi = sizeof(CP936_oem2uni) / 4 - 1;
 		} else {		/* Unicode to OEMCP */
-			p = uni2oem;
-			hi = sizeof(uni2oem) / 4 - 1;
+			p = CP936_uni2oem;
+			hi = sizeof(CP936_uni2oem) / 4 - 1;
 		}
 		li = 0;
 		for (n = 16; n; n--) {
@@ -10955,7 +10955,7 @@ WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 
 
 
-WCHAR ff_wtoupper (	/* Upper converted character */
+WCHAR CP936_ff_wtoupper (	/* Upper converted character */
 	WCHAR chr		/* Input character */
 )
 {

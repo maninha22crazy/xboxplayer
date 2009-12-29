@@ -710,7 +710,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\cc936.h"
+				RelativePath=".\cp932.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cp936.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cp949.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cp950.h"
 				>
 			</File>
 			<File

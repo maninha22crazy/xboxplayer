@@ -265,7 +265,7 @@ VOID LoadGameList(GameList *m_GameList)
 // Name: class CGameList
 // Desc: List控件的模板类
 //--------------------------------------------------------------------------------------
-class CLanguageList : public CXuiListImpl
+class CGameList : public CXuiListImpl
 {
     // Message map. Here we tie messages to message handlers.
     XUI_BEGIN_MSG_MAP()
@@ -303,7 +303,7 @@ public:
 
     // Define the class. The class name must match the ClassOverride property
     // set for the scene in the UI Authoring tool.
-    XUI_IMPLEMENT_CLASS( CLanguageList, L"LanguageList", XUI_CLASS_LIST )
+    XUI_IMPLEMENT_CLASS( CGameList, L"GameList", XUI_CLASS_LIST )
 };
 
 
@@ -314,7 +314,7 @@ public:
 class CMyMainScene : public CXuiSceneImpl
 {
     // Control and Element wrapper objects.
-    CXuiControl m_Value;
+    CXuiTextElement m_Value;
 	CXuiControl m_Page;
     CXuiList m_List;
 	CXuiImageElement m_GameImage;
@@ -345,7 +345,6 @@ class CMyMainScene : public CXuiSceneImpl
 
 		// add:默认读取xdk硬盘 date:2009-12-23 by:EME
 		MountDevice(m_nCurDevice);
-
 		m_nCountPage = (m_GameList.size() * 1.0 / m_nPageSize - m_GameList.size() / m_nPageSize) > 0 ? ( m_GameList.size() / m_nPageSize + 1) : ( m_GameList.size() / m_nPageSize);
 		swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", m_nCountPage,m_GameList.size());
 		m_Page.SetText(wszPageText);
@@ -472,6 +471,7 @@ class CMyMainScene : public CXuiSceneImpl
 		}
 		else if(isChangeDevice)
 		{
+			m_nCountPage = (m_GameList.size() * 1.0 / m_nPageSize - m_GameList.size() / m_nPageSize) > 0 ? ( m_GameList.size() / m_nPageSize + 1) : ( m_GameList.size() / m_nPageSize);
 			m_nCurPage = 1;
 			swprintf(wszPageText, L"当前页： %d/%d  [共：%d]", m_nCurPage,m_nCountPage,m_GameList.size());
 			m_Page.SetText(wszPageText);
@@ -534,7 +534,7 @@ HRESULT CMyApp::RegisterXuiClasses()
     if( FAILED( hr ) )
         return hr;
 
-    hr = CLanguageList::Register();
+    hr = CGameList::Register();
     if( FAILED( hr ) )
         return hr;
 
@@ -548,7 +548,7 @@ HRESULT CMyApp::RegisterXuiClasses()
 //--------------------------------------------------------------------------------------
 HRESULT CMyApp::UnregisterXuiClasses()
 {
-    CLanguageList::Unregister();
+    CGameList::Unregister();
     CMyMainScene::Unregister();
     return S_OK;
 }
@@ -563,10 +563,14 @@ VOID __cdecl main()
     // Declare an instance of the XUI framework application.
     CMyApp app;
 
+
     // 初始化程序   
     HRESULT hr = app.Init( XuiD3DXTextureLoader );
     if( FAILED( hr ) )
         ATG::FatalError( "Failed intializing application.\n" );
+
+	// add:初始化编码 date:2009-12-19 by:chengang
+	CP_Init(936);
 
     // 注册字体文件
     hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xarialuni.ttf" );
