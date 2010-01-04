@@ -149,6 +149,8 @@ protected:
     VOID            ProcessCameraData();
     VOID            ProcessAnimationData();
 
+	INT				GetName(const XMLAttribute* pAttributes, UINT uAttributeCount );
+	INT				GetVlaue(const XMLAttribute* pAttributes, UINT uAttributeCount );
 };
 
 } // namespace ATG

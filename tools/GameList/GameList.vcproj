@@ -726,7 +726,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Externs.h"
+				>
+			</File>
+			<File
 				RelativePath=".\GameList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Glbs.h"
 				>
 			</File>
 			<File

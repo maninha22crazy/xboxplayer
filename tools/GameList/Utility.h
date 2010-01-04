@@ -36,6 +36,12 @@ struct GameNode
 };
 typedef std::vector <GameNode> GameList;
 
+
+struct ConfigNode
+{
+	int   nLanguage;
+};
+
 //*========================================================================//
 //	Name	:	CP_Init
 //  Desc	:	≥ı ºªØ±‡¬Î

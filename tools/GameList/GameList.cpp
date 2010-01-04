@@ -15,6 +15,8 @@
 #include "GameList.h"
 #include "..\DeviceMgrLib\DeviceMgrLib.h"
 #include <algorithm>
+#include "Glbs.h"
+#include "AtgXmlFileParser.h"
 
 using namespace std; 
 
@@ -91,6 +93,21 @@ VOID SortList(GameList *m_GameList, UINT SortType)
 	m_bSortLess = !m_bSortLess;
 }
 
+//--------------------------------------------------------------------------------------
+// Name: LoadConfig
+// Desc: 读取配置文件GameList.xml
+//--------------------------------------------------------------------------------------
+VOID LoadConfig(VOID)
+{
+	ATG::XMLParser parser;
+	ATG::XmlFileParser xmlFile;
+    parser.RegisterSAXCallbackInterface( &xmlFile );
+    HRESULT hr = parser.ParseXMLFile( "game:\\GameList.xml" );
+
+    if( SUCCEEDED( hr ) )
+    {
+	}
+}
 //--------------------------------------------------------------------------------------
 // Name: MountDevice
 // Desc: 挂载设备
@@ -569,8 +586,10 @@ VOID __cdecl main()
     if( FAILED( hr ) )
         ATG::FatalError( "Failed intializing application.\n" );
 
-	// add:初始化编码 date:2009-12-19 by:chengang
-	CP_Init(936);
+	// add:读取配置文件 date:2009-12-30 by:chengang
+	LoadConfig();
+	// add:初始化编码 date:2009-12-29 by:chengang
+	CP_Init(m_ConfigNode.nLanguage);
 
     // 注册字体文件
     hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xarialuni.ttf" );

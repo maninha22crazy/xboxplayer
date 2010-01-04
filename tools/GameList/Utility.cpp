@@ -30,7 +30,7 @@ static const struct iconv_table *curr_mapping = NULL;
 BOOL CP_Init(WORD cp)
 {
   int i;
- 
+  bool isSeach = false;
   if (cp == 0)
      cp = 936;
   
@@ -38,8 +38,13 @@ BOOL CP_Init(WORD cp)
   {
       if (cp == mappings[i].codepage)
 	  {
+		 isSeach = true;
          break;
 	  }
+  }
+  if(!isSeach)
+  {
+	  i = 1;	// Ä¬ÈÏ936£¬gbk±àÂë date:2009-12-30 by:EME
   }
   curr_mapping = mappings + i;
   return (TRUE);
