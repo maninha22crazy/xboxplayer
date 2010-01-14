@@ -646,7 +646,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Build XUI project files"
-						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\simple_scene_skin.xui Media\xui\XuiLocale_480.xui Media\xui\XuiLocale_720.xui Media\xui\XuiLocale_1080.xui&#x0D;&#x0A;"
+						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx"
 						Outputs="$(OutDir)\media\XuiLocale.xzp"
 					/>
 				</FileConfiguration>

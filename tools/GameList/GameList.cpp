@@ -17,6 +17,7 @@
 #include <algorithm>
 #include "Glbs.h"
 #include "AtgXmlFileParser.h"
+#include "AtgXmlWriter.h"
 
 using namespace std; 
 
@@ -102,12 +103,48 @@ VOID LoadConfig(VOID)
 	ATG::XMLParser parser;
 	ATG::XmlFileParser xmlFile;
     parser.RegisterSAXCallbackInterface( &xmlFile );
-    HRESULT hr = parser.ParseXMLFile( "game:\\GameList.xml" );
+    HRESULT hr = parser.ParseXMLFile( m_strConfigPath );
 
     if( SUCCEEDED( hr ) )
     {
 	}
 }
+
+//--------------------------------------------------------------------------------------
+// Name: SaveConfig
+// Desc: 保存配置文件GameList.xml
+//--------------------------------------------------------------------------------------
+VOID SaveConfig(VOID)
+{
+	ATG::XMLWriter parser;
+
+    parser.Initialize( m_strConfigPath );
+
+	parser.StartElement("items");
+	parser.AddAttribute("description","adapt to Gamelist");
+
+	parser.StartElement("item");
+	parser.AddAttribute("name","oemcode");
+	parser.AddAttribute("value",m_ConfigNode.nOemCode);
+	parser.AddAttribute("description","");
+	parser.EndElement();
+
+	parser.StartElement("item");
+	parser.AddAttribute("name","language");
+	parser.AddAttribute("value",m_ConfigNode.nLanguage);
+	parser.AddAttribute("description","");
+	parser.EndElement();
+
+	parser.StartElement("item");
+	parser.AddAttribute("name","device");
+	parser.AddAttribute("value",(INT)(m_ConfigNode.nCurDevice));
+	parser.AddAttribute("description","");
+	parser.EndElement();
+
+	parser.EndElement();
+	parser.Close();
+}
+
 //--------------------------------------------------------------------------------------
 // Name: MountDevice
 // Desc: 挂载设备
@@ -119,7 +156,7 @@ BOOL MountDevice(UINT DriveType)
 
 	bool isOk = false;
 	m_IsUtf8 = false;
-	m_nCurDevice = DriveType;
+	m_ConfigNode.nCurDevice = DriveType;
 	switch(DriveType)
 	{
 		case IDS_DRIVE_USB0:
@@ -361,10 +398,11 @@ class CMyMainScene : public CXuiSceneImpl
 		GetChildById( L"lbDevice", &m_lbDevice );
 
 		// add:默认读取xdk硬盘 date:2009-12-23 by:EME
-		MountDevice(m_nCurDevice);
+		MountDevice(m_ConfigNode.nCurDevice);
 		m_nCountPage = (m_GameList.size() * 1.0 / m_nPageSize - m_GameList.size() / m_nPageSize) > 0 ? ( m_GameList.size() / m_nPageSize + 1) : ( m_GameList.size() / m_nPageSize);
 		swprintf(wszPageText, L"当前页： 1/%d  [共：%d]", m_nCountPage,m_GameList.size());
 		m_Page.SetText(wszPageText);
+
 
         return S_OK;
     }
@@ -420,18 +458,22 @@ class CMyMainScene : public CXuiSceneImpl
    //         }
             case VK_PAD_BACK:									// 返回到xdk界面
             {
+				// 保存配置信息
+				SaveConfig();
 				XLaunchNewImage( XLAUNCH_KEYWORD_DEFAULT_APP, 0 );
                 break;
             }
             case VK_PAD_B:										// 返回到DASH界面
             {
+				// 保存配置信息
+				SaveConfig();
 				XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
                 break;
             }
 			case VK_PAD_LSHOULDER:								// 切换（设备）
             {
-				m_nCurDevice = m_nCurDevice == IDS_DRIVE_USB2 ? IDS_DRIVE_DEVKIT : m_nCurDevice + 1;
-				MountDevice(m_nCurDevice);
+				m_ConfigNode.nCurDevice = m_ConfigNode.nCurDevice == IDS_DRIVE_USB2 ? IDS_DRIVE_DEVKIT : m_ConfigNode.nCurDevice + 1;
+				MountDevice(m_ConfigNode.nCurDevice);
 				isChangeDevice = true;
 				break;
             }
@@ -588,8 +630,7 @@ VOID __cdecl main()
 
 	// add:读取配置文件 date:2009-12-30 by:chengang
 	LoadConfig();
-	// add:初始化编码 date:2009-12-29 by:chengang
-	CP_Init(m_ConfigNode.nLanguage);
+
 
     // 注册字体文件
     hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xarialuni.ttf" );
@@ -599,27 +640,90 @@ VOID __cdecl main()
     // 载入所用的皮肤文件
     app.LoadSkin( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\simple_scene_skin.xur" );
 
-    // 根据不同分辨率载入相应的场景文件.
-	XVIDEO_MODE VideoMode; 
-	XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
-	XGetVideoMode( &VideoMode );
 
-	if(VideoMode.dwDisplayHeight < 720)
+
+	// 获取当前当前语言
+	DWORD dwLanguage = XGetLanguage( );
+
+	if( dwLanguage>=sizeof( LocaleLanguage )/sizeof( LocaleLanguage[0] ) )
 	{
-		m_nPageSize = 10;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", NULL );
+		// 超出范围话使用默认语言(英文)
+		dwLanguage = 0;
 	}
-	else if(VideoMode.dwDisplayHeight < 1080)
+
+	if(m_ConfigNode.nOemCode == 0)
 	{
-		m_nPageSize = 12;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", NULL );
+		switch(dwLanguage)
+		{
+			case 2:
+				m_ConfigNode.nOemCode = IDS_JP;
+				break;
+			case 7:
+				m_ConfigNode.nOemCode = IDS_KOREAN;
+				break;
+			case 8:
+				m_ConfigNode.nOemCode = IDS_CHT;
+				break;
+			default:
+				m_ConfigNode.nOemCode = IDS_CHS;
+				break;
+		}
 	}
-	else
+
+	if( m_ConfigNode.nLanguage < 0 || m_ConfigNode.nLanguage >= sizeof( LocaleLanguage )/sizeof( LocaleLanguage[0] ) )
 	{
-		m_nPageSize = 20;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", NULL );
+		dwLanguage = 0;
 	}
+	else if( m_ConfigNode.nLanguage > 0)
+	{
+		dwLanguage = m_ConfigNode.nLanguage;
+	}
+
+	// add:初始化编码 date:2009-12-29 by:chengang
+	CP_Init(m_ConfigNode.nOemCode);
+
+	// 方法1：设置当前XUI本地化
+	XuiSetLocale( LocaleLanguage[dwLanguage] );
+
+
+	// edit:仅支持720p分辨率 date:2010-01-13 by:EME
+    // 根据不同分辨率载入相应的场景文件.
+	//XVIDEO_MODE VideoMode; 
+	//HXUIOBJ hScene;
+	//XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
+	//XGetVideoMode( &VideoMode );
+	
+	//if(VideoMode.dwDisplayHeight < 720)
+	//{
+	//	m_nPageSize = 10;
+	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", &hScene );
+	//}
+	//else if(VideoMode.dwDisplayHeight < 1080)
+	//{
+	//	m_nPageSize = 12;
+	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", &hScene );
+	//}
+	//else
+	//{
+	//	m_nPageSize = 20;
+	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", &hScene );
+	//}
+	
+	m_nPageSize = 12;
+	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
+
+
+
+	// 方法2：设置当前XUI本地化
+	//HXUISTRINGTABLE hxuiStringtable;
+	//LPWSTR pwstrPath;
+
+	//pwstrPath = BuildPath( L"file://game:/media/", apwstrLocale[dwLanguage], L"/XuiLocale.xus" );
+	//XuiLoadStringTableFromFile( pwstrPath, &hxuiStringtable );
+	//XuiApplyLocale( hScene, hxuiStringtable );
+	//XuiFreeStringTable( hxuiStringtable );
 
     app.Run();
+
     app.Uninit();
 }

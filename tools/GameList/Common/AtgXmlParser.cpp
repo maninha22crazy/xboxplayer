@@ -4,7 +4,7 @@
 //  Simple callback non-validating XML parser implementation.
 //
 //  Xbox Advanced Technology Group.
-//  Copyright © Microsoft Corporation. All rights reserved.
+//  Copyright ?Microsoft Corporation. All rights reserved.
 //-------------------------------------------------------------------------------------
 
 #include "stdafx.h"

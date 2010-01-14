@@ -7,7 +7,7 @@ extern INT m_nPageSize;			//	页的可显示项
 extern INT m_nCountPage;			//	总页数
 
 
-extern CHAR* m_curRoot;			//	查找设备的根目录
+//extern CHAR* m_curRoot;			//	查找设备的根目录
 extern BOOL m_IsUtf8;				//	当前设备是否utf8命名文件名
 extern UINT m_nCurDevice;			//	当前选中的设备
 

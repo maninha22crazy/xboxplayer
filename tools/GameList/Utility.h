@@ -39,7 +39,9 @@ typedef std::vector <GameNode> GameList;
 
 struct ConfigNode
 {
-	int   nLanguage;
+	int   nOemCode;				// 编码：0-使用系统;932-ShiftJIS(日);936(GBK简体);949(韩);950(Big5繁体)
+	int   nLanguage;			// 本地化语言：0-使用系统;1-英语;2-日语;7-韩语;8-中文(繁);10-中文(简体);其他值-英语
+	UINT nCurDevice;			// 最后选中的驱动器
 };
 
 //*========================================================================//
@@ -85,4 +87,6 @@ LPSTR UnicodeToAnsi(LPCWSTR Dest);
 //========================================================================*/
 void ConvertFileName(WCHAR* Dest,const CHAR* Source,bool isUtf8);
 
+
+LPWSTR BuildPath(LPCWSTR s1,LPCWSTR s2,LPCWSTR s3);
 #endif

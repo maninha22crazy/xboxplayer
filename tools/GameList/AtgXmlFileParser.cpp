@@ -198,19 +198,39 @@ namespace ATG
 	VOID XmlFileParser::CopyAttributes( const XMLAttribute* pAttributes, UINT uAttributeCount )
 	{
 		m_CurrentElementDesc.Attributes.clear();
-		XMLElementAttributeList gamelist;
-		int i = GetName(pAttributes,uAttributeCount);
-		if(i >= 0)
+
+		WCHAR strName[MAX_PATH];
+		WCHAR strValue[MAX_PATH];
+		memset(strName,0,MAX_PATH); 
+		memset(strValue,0,MAX_PATH);
+		for(UINT i = 0; i < uAttributeCount; i++ )
 		{
-			int n = GetVlaue(pAttributes,uAttributeCount);
-			if(n >= 0)
+			WCHAR strNameT[MAX_PATH];
+			memset(strNameT,0,MAX_PATH); 
+
+			wcsncpy_s( strNameT,pAttributes[i].strName,pAttributes[i].NameLen);
+
+			if(_wcsicmp(strNameT,L"name") == 0)
 			{
-				if(_wcsicmp(pAttributes[i].strValue,L"language") == 0)
-				{
-				   m_ConfigNode.nLanguage = _wtoi(pAttributes[n].strValue);
-				   return;
-				}
+				wcsncpy_s( strName,pAttributes[i].strValue,pAttributes[i].ValueLen);
 			}
+			else if(_wcsicmp(strNameT,L"value") == 0)
+			{
+				wcsncpy_s( strValue,pAttributes[i].strValue,pAttributes[i].ValueLen);
+			}
+		}
+
+		if(_wcsicmp(strName,L"language") == 0)
+		{
+			m_ConfigNode.nLanguage = _wtoi(strValue);
+		}
+		else if(_wcsicmp(strName,L"device") == 0)
+		{
+			m_ConfigNode.nCurDevice = _wtoi(strValue);
+		}
+		else if(_wcsicmp(strName,L"oemcode") == 0)
+		{
+			m_ConfigNode.nOemCode = _wtoi(strValue);
 		}
 	}
 

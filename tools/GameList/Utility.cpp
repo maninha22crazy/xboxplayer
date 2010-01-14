@@ -128,3 +128,31 @@ void ConvertFileName(WCHAR* Dest,const CHAR* Source,bool isUtf8)
     }
 	Dest[i] = '\0';
 }
+
+
+//--------------------------------------------------------------------------------------
+// Name: BuildPath
+// Desc: Á¬½Ó
+//--------------------------------------------------------------------------------------
+LPWSTR BuildPath(LPCWSTR s1,LPCWSTR s2,LPCWSTR s3)
+{
+	int cw = lstrlenW(s1) + lstrlenW(s2) + lstrlenW(s3);
+	WCHAR *psz = new WCHAR[cw + 1];
+	int i = 0,j = 0;
+	while(s1[j] != '\0')
+    {
+		psz[i++] = s1[j++];
+    }
+	j = 0;
+	while(s2[j] != '\0')
+    {
+		psz[i++] = s2[j++];
+    }
+	j = 0;
+	while(s3[j] != '\0')
+    {
+		psz[i++] = s3[j++];
+    }
+	psz[i] = '\0';
+	return psz;
+}
