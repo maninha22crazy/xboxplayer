@@ -1,7 +1,7 @@
 ﻿<root>
 <data name="MainScene.labelA.Text"><value>选择</value></data>
-<data name="MainScene.labelY.Text"><value>Menu</value></data>
-<data name="MainScene.labelB.Text"><value>Back</value></data>
+<data name="MainScene.labelY.Text"><value>菜单</value></data>
+<data name="MainScene.labelB.Text"><value>返回</value></data>
 <data name="MainScene.labelValueInfo.Text"><value>软件说明：
         XexDash是一款国人开发的游戏程序读取软件，运行于XBOX360开发机及其零售机自制系统.
 功能更新：
