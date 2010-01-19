@@ -1,19 +1,19 @@
 ﻿<root>
-<data name="MainScene.labelA.Text"><value>选择</value></data>
-<data name="MainScene.labelY.Text"><value>Menu</value></data>
-<data name="MainScene.labelB.Text"><value>Back</value></data>
-<data name="MainScene.labelValueInfo.Text"><value>软件说明：
-        XexDash是一款国人开发的游戏程序读取软件，运行于XBOX360开发机及其零售机自制系统.
+<data name="MainScene.labelA.Text"><value>選擇</value></data>
+<data name="MainScene.labelY.Text"><value>菜單</value></data>
+<data name="MainScene.labelB.Text"><value>返回</value></data>
+<data name="MainScene.labelValueInfo.Text"><value>軟件說明：
+        XexDash是一款國人開發的遊戲程序讀取軟件，運行于xbox360開發機以其零售機自製系統.
 功能更新：
-        ：美化系统界面
-        ：增加多国语言版本及其支持
-        ：增加游戏背景、ID、名字、ICO显示
-        ：增加软件自定义背景功能
-        ：软件启动默认选择驱动器</value></data>
-<data name="MainScene.listMenu.ItemsText"><value>设备切换
-语言选择
-开启背景图
-设置背景图
+        ：美化系統介面
+        ：增加多國語言及其支持
+        ：增加遊戲背景、ID、標題、ICO顯示
+        ：增加軟件自定義背景圖
+        ：軟件啟動默認選擇最後的驅動器</value></data>
+<data name="MainScene.listMenu.ItemsText"><value>設備切換
+語言選擇
+開啟背景圖
+設置背景圖
 返回XDK
 返回DASH</value></data>
 </root>
