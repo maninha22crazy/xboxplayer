@@ -1,7 +1,20 @@
 ﻿<root>
-<data name="MainScene.labelGameTitle1.Text"><value>게임이미지</value></data>
-<data name="MainScene.labelSetting.Text"><value>선택된항목：</value></data>
-<data name="MainScene.labelGameTitle.Text"><value>메뉴</value></data>
-<data name="MainScene.labelTitleId.Text"><value>게임ID：</value></data>
-<data name="MainScene.labelTitleName.Text"><value>게임이름：</value></data>
+<data name="MainScene.labelA.Text"><value>选择</value></data>
+<data name="MainScene.labelY.Text"><value>Menu</value></data>
+<data name="MainScene.labelB.Text"><value>Back</value></data>
+<data name="MainScene.labelValueInfo.Text"><value>软件说明：
+        XexDash是一款国人开发的游戏程序读取软件，运行于XBOX360开发机及其零售机自制系统.
+功能更新：
+        ：美化系统界面
+        ：增加多国语言版本及其支持
+        ：增加游戏背景、ID、名字、ICO显示
+        ：增加软件自定义背景功能
+        ：软件启动默认选择驱动器</value></data>
+<data name="MainScene.listMenu.ItemsText"><value>设备切换
+语言选择
+开启背景图
+设置背景图
+返回XDK
+返回DASH</value></data>
 </root>
+
