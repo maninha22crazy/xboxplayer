@@ -619,6 +619,8 @@ class CMyMainScene : public CXuiSceneImpl
 				{
 					return;
 				}
+				CloseHandle(m_hFile) ;
+
 				ofstream out2;
 				m_pReadBuf[ NChars ] = '\0';
 				m_pReadBuf[ NChars + 1] = '\0';
