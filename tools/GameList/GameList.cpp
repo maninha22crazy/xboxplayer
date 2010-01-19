@@ -601,6 +601,7 @@ class CMyMainScene : public CXuiSceneImpl
 	{
 		if(!m_GameList[m_nCurSel].bIsRegion)
 		{
+			BYTE  m_pReadBuf[ BUFSIZE + 2 ];
 			m_GameList[m_nCurSel].bIsRegion = true;
 			CHAR cNxeartFile[MAX_PATH];
 			sprintf(cNxeartFile, "%s:\\hidden\\%s\\nxeart", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
@@ -617,6 +618,7 @@ class CMyMainScene : public CXuiSceneImpl
 				DWORD NChars;
 				if( !ReadFile( m_hFile, m_pReadBuf, BUFSIZE, &NChars, NULL ))
 				{
+					CloseHandle(m_hFile);
 					return;
 				}
 				CloseHandle(m_hFile) ;
@@ -1130,7 +1132,7 @@ class CMyMainScene : public CXuiSceneImpl
 					m_ImageY.SetOpacity(0);
 					m_labelY.SetOpacity(0);
 
-					m_panelMenu.SetOpacity(1);
+					//m_panelMenu.SetOpacity(1);
 					m_listMenu.SetOpacity(1);
 					m_listMenu.SetFocus(XUSER_INDEX_ANY);
 					break;
@@ -1277,6 +1279,7 @@ VOID __cdecl main()
 	m_ConfigNode.nOemCode = 936; // 默认简体936编码
 	m_ConfigNode.strDevice = L"Devkit";
 	m_ConfigNode.strWallPath = L"";
+	m_ConfigNode.nShowNewWall = 0;
 	// add:读取配置文件 date:2009-12-30 by:chengang
 	LoadConfig();
 

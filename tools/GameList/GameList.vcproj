@@ -76,6 +76,8 @@
 				OutputFile="$(OutDir)/$(ProjectName).exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
+				StackReserveSize="6000000"
+				StackCommitSize="6000000"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -436,6 +438,8 @@
 				AdditionalDependencies="d3d9.lib d3dx9.lib xgraphics.lib xapilib.lib xaudio.lib x3daudio.lib xboxkrnl.lib xbdm.lib xact.lib xuirun.lib xuirender.lib xmedia.lib"
 				OutputFile="$(OutDir)/$(ProjectName).exe"
 				GenerateDebugInformation="true"
+				StackReserveSize="6000000"
+				StackCommitSize="6000000"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				SetChecksum="true"
@@ -646,7 +650,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Build XUI project files"
-						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\ko-kr\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx Media\xui\A.png Media\xui\B.png Media\xui\Y.png Media\xui\B.png Media\xui\LB.png Media\xui\B.png Media\xui\RB.png Media\xui\B.png Media\xui\BottomImage.png"
+						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\ko-kr\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx Media\xui\A.png Media\xui\B.png Media\xui\Y.png Media\xui\B.png Media\xui\LB.png Media\xui\B.png Media\xui\RB.png Media\xui\B.png Media\xui\BottomImage.png&#x0D;&#x0A;"
 						Outputs="$(OutDir)\media\XuiLocale.xzp"
 					/>
 				</FileConfiguration>

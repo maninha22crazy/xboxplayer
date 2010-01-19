@@ -25,7 +25,7 @@ struct device_table m_DeviceMappings[] = {
 
 CXuiTextElement m_lbGameTitle;	
 
-BOOL m_bSortLess	= true;			//	Éý½µÐò
+BOOL m_bSortLess	= false;			//	Éý½µÐò
 
 struct device_table m_curDevice;
 ConfigNode m_ConfigNode;				//  ÅäÖÃÐÅÏ¢
@@ -53,8 +53,8 @@ LPCWSTR LocaleLanguage[11] =
 	L"zh-chs"	// Simplified Chinese
 };
 
-#define BUFSIZE			9000000	
-BYTE  m_pReadBuf[ BUFSIZE + 2 ];
+#define BUFSIZE			5000000	
+
  
 
 static const UINT BlockLevel[] = { 0xA8000, 0x154000 };
