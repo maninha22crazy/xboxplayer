@@ -12295,20 +12295,22 @@
 <Properties>
 <Id>XuiList</Id>
 <Width>266.000000</Width>
-<Height>96.000000</Height>
+<Height>40.000000</Height>
 </Properties>
 <XuiGroup>
 <Properties>
 <Id>graphic_groupbackground</Id>
 <Width>265.655182</Width>
-<Height>95.998039</Height>
+<Height>39.998039</Height>
+<Position>0.000000,2.000000,0.000000</Position>
 <Anchor>15</Anchor>
+<Show>false</Show>
 </Properties>
 <XuiFigure>
 <Properties>
 <Id>graphic_middle</Id>
 <Width>242.999985</Width>
-<Height>71.006790</Height>
+<Height>15.006790</Height>
 <Position>11.341797,12.498047,0.000000</Position>
 <Anchor>15</Anchor>
 <Stroke>
@@ -12340,7 +12342,7 @@
 <Properties>
 <Id>graphic_Left</Id>
 <Width>11.333984</Width>
-<Height>71.006790</Height>
+<Height>15.006790</Height>
 <Position>0.000000,12.498047,0.000000</Position>
 <Anchor>11</Anchor>
 <Stroke>
@@ -12372,7 +12374,7 @@
 <Properties>
 <Id>graphic_Right</Id>
 <Width>11.333984</Width>
-<Height>71.006790</Height>
+<Height>15.006790</Height>
 <Position>254.321213,12.498047,0.000000</Position>
 <Anchor>14</Anchor>
 <Stroke>
@@ -12500,7 +12502,7 @@
 <Id>graphic_RightBot</Id>
 <Width>41.334961</Width>
 <Height>12.498047</Height>
-<Position>224.313400,83.500000,0.000000</Position>
+<Position>224.313400,27.500000,0.000000</Position>
 <Anchor>12</Anchor>
 <Stroke>
 <Properties>
@@ -12532,7 +12534,7 @@
 <Id>graphic_LeftBot</Id>
 <Width>41.334961</Width>
 <Height>12.498047</Height>
-<Position>0.000000,83.500000,0.000000</Position>
+<Position>0.000000,27.500000,0.000000</Position>
 <Anchor>9</Anchor>
 <Stroke>
 <Properties>
@@ -12564,7 +12566,7 @@
 <Id>graphic_Bot</Id>
 <Width>182.999008</Width>
 <Height>12.490234</Height>
-<Position>41.318359,83.500000,0.000000</Position>
+<Position>41.318359,27.500000,0.000000</Position>
 <Anchor>13</Anchor>
 <Stroke>
 <Properties>
@@ -12592,33 +12594,12 @@
 </Properties>
 </XuiFigure>
 </XuiGroup>
-<XuiScrollEnd>
-<Properties>
-<Id>control_ScrollUp</Id>
-<Width>33.000000</Width>
-<Height>18.000000</Height>
-<Position>214.000000,5.000000,0.000000</Position>
-<Anchor>6</Anchor>
-<Visual>XuiScrollEndUp</Visual>
-</Properties>
-</XuiScrollEnd>
-<XuiScrollEnd>
-<Properties>
-<Id>control_ScrollDown</Id>
-<Width>33.000000</Width>
-<Height>17.000000</Height>
-<Position>214.000000,72.000000,0.000000</Position>
-<Anchor>12</Anchor>
-<Visual>XuiScrollEnd</Visual>
-<Direction>1</Direction>
-</Properties>
-</XuiScrollEnd>
 <XuiListItem>
 <Properties>
 <Id>control_ListItem</Id>
 <Width>254.000000</Width>
-<Height>40.000000</Height>
-<Position>7.000000,26.000000,0.000000</Position>
+<Height>38.000000</Height>
+<Position>7.000000,2.000000,0.000000</Position>
 <Anchor>5</Anchor>
 <Visual>XuiButton</Visual>
 </Properties>
@@ -13967,7 +13948,7 @@
 <Anchor>5</Anchor>
 <Fill>
 <Properties>
-<FillColor>0xff8c8c8c</FillColor>
+<FillColor>0x648c8c8c</FillColor>
 </Properties>
 </Fill>
 <Closed>true</Closed>
@@ -13983,7 +13964,7 @@
 <Anchor>5</Anchor>
 <Fill>
 <Properties>
-<FillColor>0xff8c8c8c</FillColor>
+<FillColor>0x648c8c8c</FillColor>
 </Properties>
 </Fill>
 <Closed>true</Closed>
@@ -14002,7 +13983,7 @@
 </Stroke>
 <Fill>
 <Properties>
-<FillColor>0xff8c8c8c</FillColor>
+<FillColor>0x648c8c8c</FillColor>
 <Gradient>
 <Properties>
 <NumStops>2</NumStops>
@@ -14037,14 +14018,14 @@
 <Properties>
 <Radial>true</Radial>
 <NumStops>4</NumStops>
-<StopColor index="0">0xff7d7d7d</StopColor>
-<StopColor index="1">0xffb4b4b4</StopColor>
-<StopColor index="2">0xffd2d2d2</StopColor>
-<StopColor index="3">0xffebebeb</StopColor>
-<StopPos index="0">0.086275</StopPos>
-<StopPos index="1">0.470588</StopPos>
-<StopPos index="2">0.494118</StopPos>
-<StopPos index="3">0.682353</StopPos>
+<StopColor index="0">0x327d7d7d</StopColor>
+<StopColor index="1">0x32b4b4b4</StopColor>
+<StopColor index="2">0x32d2d2d2</StopColor>
+<StopColor index="3">0x32ebebeb</StopColor>
+<StopPos index="0">0.082353</StopPos>
+<StopPos index="1">0.462745</StopPos>
+<StopPos index="2">0.482353</StopPos>
+<StopPos index="3">0.666667</StopPos>
 </Properties>
 </Gradient>
 <Translation>0.210000,-0.080000,0.000000</Translation>
@@ -14071,7 +14052,7 @@
 </Stroke>
 <Fill>
 <Properties>
-<FillColor>0xff8c8c8c</FillColor>
+<FillColor>0x648c8c8c</FillColor>
 <Gradient>
 <Properties>
 <NumStops>2</NumStops>
@@ -14108,14 +14089,14 @@
 <Properties>
 <Radial>true</Radial>
 <NumStops>4</NumStops>
-<StopColor index="0">0xff7d7d7d</StopColor>
-<StopColor index="1">0xffb4b4b4</StopColor>
-<StopColor index="2">0xffd2d2d2</StopColor>
-<StopColor index="3">0xffebebeb</StopColor>
+<StopColor index="0">0x327d7d7d</StopColor>
+<StopColor index="1">0x32b4b4b4</StopColor>
+<StopColor index="2">0x32d2d2d2</StopColor>
+<StopColor index="3">0x32ebebeb</StopColor>
 <StopPos index="0">0.086275</StopPos>
-<StopPos index="1">0.470588</StopPos>
-<StopPos index="2">0.494118</StopPos>
-<StopPos index="3">0.682353</StopPos>
+<StopPos index="1">0.454902</StopPos>
+<StopPos index="2">0.501961</StopPos>
+<StopPos index="3">0.670588</StopPos>
 </Properties>
 </Gradient>
 <Translation>0.210000,-0.080000,0.000000</Translation>
@@ -14145,14 +14126,14 @@
 <Gradient>
 <Properties>
 <NumStops>4</NumStops>
-<StopColor index="0">0xff828282</StopColor>
-<StopColor index="1">0xffb4b4b4</StopColor>
-<StopColor index="2">0xffd2d2d2</StopColor>
-<StopColor index="3">0xffebebeb</StopColor>
+<StopColor index="0">0x32828282</StopColor>
+<StopColor index="1">0x32b4b4b4</StopColor>
+<StopColor index="2">0x32d2d2d2</StopColor>
+<StopColor index="3">0x32ebebeb</StopColor>
 <StopPos index="0">0.000000</StopPos>
-<StopPos index="1">0.592157</StopPos>
-<StopPos index="2">0.627451</StopPos>
-<StopPos index="3">1.000000</StopPos>
+<StopPos index="1">0.576471</StopPos>
+<StopPos index="2">0.615686</StopPos>
+<StopPos index="3">0.996078</StopPos>
 </Properties>
 </Gradient>
 <Rotation>90.000000</Rotation>
@@ -14167,7 +14148,7 @@
 <Id>text_Label</Id>
 <Width>261.000000</Width>
 <Height>28.000000</Height>
-<Position>9.000000,5.000000,0.000000</Position>
+<Position>11.000000,4.000000,0.000000</Position>
 <Anchor>15</Anchor>
 <TextColor>0xff0f0f0f</TextColor>
 <PointSize>13.000000</PointSize>
@@ -14262,13 +14243,13 @@
 <KeyFrame>
 <Time>0</Time>
 <Interpolation>1</Interpolation>
-<Prop>0.627451</Prop>
-<Prop>0xff828282</Prop>
-<Prop>0xffd2d2d2</Prop>
-<Prop>0xffebebeb</Prop>
+<Prop>0.615686</Prop>
+<Prop>0x32828282</Prop>
+<Prop>0x32d2d2d2</Prop>
+<Prop>0x32ebebeb</Prop>
 <Prop>0xff646464</Prop>
-<Prop>0xffb4b4b4</Prop>
-<Prop>0.592157</Prop>
+<Prop>0x32b4b4b4</Prop>
+<Prop>0.576471</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>
@@ -14506,17 +14487,17 @@
 <Interpolation>1</Interpolation>
 <Prop>0.541176</Prop>
 <Prop>0.866667</Prop>
-<Prop>0xff7d7d7d</Prop>
-<Prop>0xffb4b4b4</Prop>
-<Prop>0xffd2d2d2</Prop>
-<Prop>0xffebebeb</Prop>
+<Prop>0x327d7d7d</Prop>
+<Prop>0x32b4b4b4</Prop>
+<Prop>0x32d2d2d2</Prop>
+<Prop>0x32ebebeb</Prop>
 <Prop>0xffd2d2d2</Prop>
 <Prop>0xffdcdcdc</Prop>
 <Prop>0xffebebeb</Prop>
 <Prop>0xff646464</Prop>
-<Prop>0.470588</Prop>
-<Prop>0.494118</Prop>
-<Prop>0.682353</Prop>
+<Prop>0.462745</Prop>
+<Prop>0.482353</Prop>
+<Prop>0.666667</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>
@@ -14802,19 +14783,19 @@
 <Interpolation>1</Interpolation>
 <Prop>0.541176</Prop>
 <Prop>0.866667</Prop>
-<Prop>0xff7d7d7d</Prop>
-<Prop>0xffb4b4b4</Prop>
-<Prop>0xffd2d2d2</Prop>
+<Prop>0x327d7d7d</Prop>
+<Prop>0x32b4b4b4</Prop>
+<Prop>0x32d2d2d2</Prop>
 <Prop>0xff828282</Prop>
 <Prop>0xffd2d2d2</Prop>
 <Prop>0xffdcdcdc</Prop>
 <Prop>0xffebebeb</Prop>
 <Prop>0xff646464</Prop>
-<Prop>0.470588</Prop>
+<Prop>0.454902</Prop>
 <Prop>0.792157</Prop>
-<Prop>0xffebebeb</Prop>
-<Prop>0.494118</Prop>
-<Prop>0.682353</Prop>
+<Prop>0x32ebebeb</Prop>
+<Prop>0.501961</Prop>
+<Prop>0.670588</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>
@@ -15120,7 +15101,7 @@
 <Prop>0xffebebeb</Prop>
 <Prop>0xff6e6e6e</Prop>
 <Prop>0xff646464</Prop>
-<Prop>0xff8c8c8c</Prop>
+<Prop>0x648c8c8c</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>
@@ -15217,7 +15198,7 @@
 <KeyFrame>
 <Time>0</Time>
 <Interpolation>1</Interpolation>
-<Prop>0xff8c8c8c</Prop>
+<Prop>0x648c8c8c</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>
@@ -15281,7 +15262,7 @@
 <KeyFrame>
 <Time>0</Time>
 <Interpolation>1</Interpolation>
-<Prop>0xff8c8c8c</Prop>
+<Prop>0x648c8c8c</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>
@@ -15351,7 +15332,7 @@
 <Prop>0xffebebeb</Prop>
 <Prop>0xff6e6e6e</Prop>
 <Prop>0xff646464</Prop>
-<Prop>0xff8c8c8c</Prop>
+<Prop>0x648c8c8c</Prop>
 </KeyFrame>
 <KeyFrame>
 <Time>2</Time>

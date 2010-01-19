@@ -1,7 +1,7 @@
 ﻿<root>
-<data name="MainScene.labelGameTitle1.Text"><value>게임 사진</value></data>
-<data name="MainScene.labelSetting.Text"><value>현재 선택된:</value></data>
-<data name="MainScene.labelGameTitle2.Text"><value>(보도 자료,, X는 이름있는 Y는 빽빽한 덤불을 목록에서 마우스 오른쪽 정렬 다음 페이지 LB 스위칭 장비, 왼쪽 대쉬로 XDK, B 조로 돌아가서) 경기를 입력</value></data>
-<data name="MainScene.labelGameTitle.Text"><value>게임 목록</value></data>
+<data name="MainScene.labelGameTitle1.Text"><value>게임이미지</value></data>
+<data name="MainScene.labelSetting.Text"><value>선택된항목：</value></data>
+<data name="MainScene.labelGameTitle.Text"><value>메뉴</value></data>
+<data name="MainScene.labelTitleId.Text"><value>게임ID：</value></data>
+<data name="MainScene.labelTitleName.Text"><value>게임이름：</value></data>
 </root>
-

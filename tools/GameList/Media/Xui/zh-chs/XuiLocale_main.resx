@@ -1,7 +1,8 @@
 ﻿<root>
 <data name="MainScene.labelGameTitle1.Text"><value>游戏图片</value></data>
-<data name="MainScene.labelSetting.Text"><value>当前选中</value></data>
-<data name="MainScene.labelGameTitle2.Text"><value>（按A进入游戏,左、右翻页,LB切换设备,X按名称排序,Y重刷列表,BACK返回XDK,B进入Dash）</value></data>
+<data name="MainScene.labelSetting.Text"><value>当前选中：</value></data>
 <data name="MainScene.labelGameTitle.Text"><value>游戏列表</value></data>
+<data name="MainScene.labelTitleId.Text"><value>游戏ID：</value></data>
+<data name="MainScene.labelTitleName.Text"><value>游戏名：</value></data>
 </root>
 

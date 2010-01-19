@@ -1,7 +1,8 @@
 ﻿<root>
-<data name="MainScene.labelGameTitle1.Text"><value>Game Title</value></data>
-<data name="MainScene.labelSetting.Text"><value>Selected</value></data>
-<data name="MainScene.labelGameTitle2.Text"><value>(Press A to enter the game, left, right next page, LB switching equipment, X sorted by name, Y heavy brush list, BACK to return XDK, B into the Dash)</value></data>
-<data name="MainScene.labelGameTitle.Text"><value>Game Catalog</value></data>
+<data name="MainScene.labelGameTitle1.Text"><value>Game Image</value></data>
+<data name="MainScene.labelSetting.Text"><value>Selected：</value></data>
+<data name="MainScene.labelGameTitle.Text"><value>Game List</value></data>
+<data name="MainScene.labelTitleId.Text"><value>Title ID：</value></data>
+<data name="MainScene.labelTitleName.Text"><value>Title Name：</value></data>
 </root>
 
