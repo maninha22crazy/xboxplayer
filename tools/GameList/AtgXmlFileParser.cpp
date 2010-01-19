@@ -226,11 +226,23 @@ namespace ATG
 		}
 		else if(_wcsicmp(strName,L"device") == 0)
 		{
-			m_ConfigNode.nCurDevice = _wtoi(strValue);
+			m_ConfigNode.strDevice = strValue;
 		}
 		else if(_wcsicmp(strName,L"oemcode") == 0)
 		{
 			m_ConfigNode.nOemCode = _wtoi(strValue);
+		}
+		else if(_wcsicmp(strName,L"showwall") == 0)
+		{
+			m_ConfigNode.nShowWall = _wtoi(strValue);
+		}
+		else if(_wcsicmp(strName,L"shownewwall") == 0)
+		{
+			m_ConfigNode.nShowNewWall = _wtoi(strValue);
+		}
+		else if(_wcsicmp(strName,L"wallPath") == 0)
+		{
+			m_ConfigNode.strWallPath = strValue;
 		}
 	}
 

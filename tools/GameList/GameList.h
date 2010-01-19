@@ -8,6 +8,7 @@
 #ifndef GameList_H
 #define GameList_H
 
+WCHAR m_lpImgPathBuf[MAX_PATH];
 
 /**--------------------------------------------------------------------------------------
  * LoadGameList - 当前目录下的Hidden目录下的第一层目录加载都向量列表里
@@ -25,7 +26,7 @@ VOID LoadGameList(GameList *m_GameList);
 
 /**--------------------------------------------------------------------------------------
  * getGameTitle - 游戏文件说明
- * @lpFileName: 游戏说明文件
+ * @lstrFileName: 游戏说明文件
  * @lpGameName: 游戏名
  *
  *文件目录结构：
@@ -34,27 +35,9 @@ VOID LoadGameList(GameList *m_GameList);
  * Author：GooHome
  * History：2009/12/12 初版做成
  --------------------------------------------------------------------------------------*/
-bool getGameTitle(char* lpFileName,char* lpGameName);
+bool getGameTitle(char* lstrFileName,char* lpGameName);
 
 
-//*========================================================================//
-//	Name	:	MountDevice
-//  Desc	:	挂载设备
-//	Param	: 
-//			DriveType:	要挂载的设备ID:
-//										IDS_DRIVE_DEVKIT	:	DEVKIT映射盘符
-//										IDS_DRIVE_USB0		:	USB接口0
-//										IDS_DRIVE_USB1		:	USB接口1
-//										IDS_DRIVE_USB2		:	USB接口2
-//										IDS_DRIVE_DVD		:	DVD光驱
-//										IDS_DRIVE_FLASH		:	FLASH
-//										IDS_DRIVE_HDD		:	HDD硬盘
-//
-//	Return	:	true - 挂载成功;flase - 挂载失败
-//	Coder	:	EME
-//	Date	:	2009-12-24
-//========================================================================*/
-BOOL MountDevice(UINT DriveType);
 
 //*========================================================================//
 //	Name	:	SortList

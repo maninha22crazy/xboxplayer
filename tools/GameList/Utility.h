@@ -27,21 +27,45 @@
 #define IDS_DRIVE_HDD							6
 
 
+struct device_table {
+	        const char		*deviceName;
+			const wchar_t		*deviceNameW;
+	        UINT			deviceIndex;
+	        bool		isSuccess;
+			bool		isUtf8;
+	      };
+
 struct GameNode
 {
     WCHAR   strName[MAX_PATH];
-    CHAR   strPath[MAX_PATH];
-	CHAR   strImg[MAX_PATH];
+    CHAR	strPath[MAX_PATH];
+	WCHAR   strTitleImagePath[MAX_PATH];
 	FILETIME ftCreationTime;
+
+	
+	CHAR	strFileName[MAX_PATH];
+	WCHAR   strWallPath[MAX_PATH];
+	WCHAR	strIcoPath[MAX_PATH];
+	WCHAR	strTitleID[0x40];
+	WCHAR	strGameTitle[MAX_PATH];
+	BOOL	bIsRegion;
 };
 typedef std::vector <GameNode> GameList;
 
+union uDate
+{   
+  UINT   limit_data;   
+  unsigned   char   buffer[4];   
+};  
 
 struct ConfigNode
 {
 	int   nOemCode;				// 编码：0-使用系统;932-ShiftJIS(日);936(GBK简体);949(韩);950(Big5繁体)
 	int   nLanguage;			// 本地化语言：0-使用系统;1-英语;2-日语;7-韩语;8-中文(繁);10-中文(简体);其他值-英语
-	UINT nCurDevice;			// 最后选中的驱动器
+	WCHAR* strDevice;			// 最后选中的驱动器
+	int   nShowWall;			// 是否显示背景图：默认打开-1;0-关闭
+	int   nShowNewWall;			// 是否显示自定义背景图：默认否-0;1-是
+	WCHAR* strWallPath;			// 要显示的背景图
 };
 
 //*========================================================================//
@@ -89,4 +113,8 @@ void ConvertFileName(WCHAR* Dest,const CHAR* Source,bool isUtf8);
 
 
 LPWSTR BuildPath(LPCWSTR s1,LPCWSTR s2,LPCWSTR s3);
+
+LPWSTR StrAdd(LPCWSTR s1,LPCWSTR s2);
+
+UINT ReadUInt32(CHAR* buff);
 #endif
