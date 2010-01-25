@@ -14,6 +14,7 @@
 #define IDS_DRIVE_FLASH						5
 #define IDS_DRIVE_HDD							6
 
+// 设备节点信息
 struct device_table 
 {
     char		*deviceName;
@@ -23,6 +24,7 @@ struct device_table
 	bool		isUtf8;
 };
 
+// 游戏节点信息
 struct GameNode
 {
     WCHAR   strName[MAX_PATH];
@@ -39,6 +41,14 @@ struct GameNode
 	BOOL	bIsRegion;
 };
 
+// Arc节点信息（从xml中解析）
+struct ArcadeInfo
+{
+	WCHAR* strID;				// ID
+	WCHAR* strName;				// Name
+	WCHAR* strImagePath;		// ImagePath
+	WCHAR* strDescription;		// Description
+};
 
 struct ConfigNode
 {
@@ -53,7 +63,8 @@ struct ConfigNode
 
 typedef std::vector <GameNode> GameList;
 extern struct device_table m_DeviceMappings[7];
-extern ConfigNode m_ConfigNode;						//  配置信息
 extern LPCWSTR LocaleLanguage[11];						// 多语言支持
+extern ConfigNode m_ConfigNode;						// 配置信息
+extern ArcadeInfo m_ArcadeInfo;						// 当前选中的arc信息
 
 #endif

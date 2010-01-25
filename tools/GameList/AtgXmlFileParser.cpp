@@ -65,12 +65,17 @@ namespace ATG
 
 
 
-	HRESULT XmlFileParser::LoadXMLFile( const CHAR* strFilename)
+	HRESULT XmlFileParser::LoadXMLFile( const CHAR* strFilename,void* pNode,UINT nType)
 	{
 		XMLParser parser;
 		XmlFileParser XATGParser;
 
 		g_strParseError[0] = '\0';
+		
+		if(nType == 1)
+		{
+			pArcadeInfo = (ArcadeInfo*)pNode;
+		}
 
 		parser.RegisterSAXCallbackInterface( &XATGParser );
 
@@ -133,7 +138,15 @@ namespace ATG
 		// Clear out the accumulated element body.
 		m_CurrentElementDesc.strElementBody[0] = L'\0';
 		// Copy all attributes from the begin tag into the current element desc.
-		CopyAttributes( pAttributes, NumAttributes );
+
+		if(m_nType == 1)
+		{
+			CopyAttributesArc( pAttributes, NumAttributes );
+		}
+		else
+		{
+			CopyAttributesAppConfig( pAttributes, NumAttributes );
+		}
 		return S_OK;
 	}
 
@@ -167,35 +180,12 @@ namespace ATG
 		return S_OK;
 	}
 
-	INT XmlFileParser::GetVlaue(const XMLAttribute* pAttributes, UINT uAttributeCount )
+	VOID XmlFileParser::CopyAttributesArc( const XMLAttribute* pAttributes, UINT uAttributeCount )
 	{
-		UINT i = 0;
-		WCHAR name[MAX_PATH];
-		for(i = 0; i < uAttributeCount; i++ )
-		{
-		   if(_wcsicmp(pAttributes[i].strName,L"value") == 0)
-		   {
-			   return i;
-		   }
-		}
-		return -1;
+
 	}
 
-	INT XmlFileParser::GetName(const XMLAttribute* pAttributes, UINT uAttributeCount )
-	{
-		UINT i = 0;
-		WCHAR name[MAX_PATH];
-		for(i = 0; i < uAttributeCount; i++ )
-		{
-		   if(_wcsicmp(pAttributes[i].strName,L"name") == 0)
-		   {
-			   return i;
-		   }
-		}
-		return -1;
-	}
-
-	VOID XmlFileParser::CopyAttributes( const XMLAttribute* pAttributes, UINT uAttributeCount )
+	VOID XmlFileParser::CopyAttributesAppConfig( const XMLAttribute* pAttributes, UINT uAttributeCount )
 	{
 		m_CurrentElementDesc.Attributes.clear();
 
@@ -304,17 +294,6 @@ namespace ATG
 
 		// We are processing a begin tag.
 		m_CurrentElementDesc.bEndElement = FALSE;
-
-		// 提取节点信息
-		//if( MATCH_ELEMENT_NAME( L"data" ))
-		//{
-		//	//memset(m_GameList[m_GameCount].pszGameName,0,256); 
-		//	//memset(m_GameList[m_GameCount].pszGameNamePath,0,256); 
-
-		//	wcsncpy_s( m_GameList[m_GameCount].pszGameName,  m_CurrentElementDesc.Attributes[0].strValue, m_CurrentElementDesc.Attributes[0].NameLen);
-		//	wcsncpy_s( m_GameList[m_GameCount].pszGameNamePath, m_CurrentElementDesc.Attributes[1].strValue,m_CurrentElementDesc.Attributes[1].ValueLen);
-		//	m_GameCount++;
-		//}
 	}
 
 

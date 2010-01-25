@@ -94,7 +94,7 @@ public:
     //         E_ABORT - callback returned a fail code
     //         S_OK - file parsed and completed   
 
-    HRESULT    ParseXMLFile( CONST CHAR *strFilename );                              
+    HRESULT    ParseXMLFile( CONST CHAR *strFilename);                              
     
     //      Parses from a buffer- if you pass a WCHAR buffer (and cast it), it will 
     //         correctly detect it and use unicode instead.  Return codes are the

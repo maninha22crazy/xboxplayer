@@ -716,6 +716,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CFtpServer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\cp932.h"
 				>
 			</File>
@@ -756,6 +760,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CFtpServer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GameList.cpp"
 				>
 			</File>
@@ -765,11 +773,11 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\CFtpServer.cpp"
+			RelativePath=".\HttpClient.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\CFtpServer.h"
+			RelativePath=".\HttpClient.h"
 			>
 		</File>
 	</Files>

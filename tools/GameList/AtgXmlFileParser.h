@@ -97,9 +97,10 @@ enum XATGLoaderFlags
 class XmlFileParser : public ISAXCallback
 {
 public:
-	GameList m_GameList;
+	UINT			m_nType;			// 节点类型
+	ArcadeInfo*		pArcadeInfo;		
     HRESULT  PrepareForThreadedLoad( CRITICAL_SECTION* pCriticalSection );
-    HRESULT  LoadXMLFile( const CHAR* strFileName);
+    HRESULT  LoadXMLFile( const CHAR* strFileName,void* pNode,UINT	nType = 0);
     CHAR* GetParseErrorMessage();
 
     virtual HRESULT StartDocument()
@@ -133,7 +134,8 @@ protected:
     XATGParserContext m_Context;
     XMLElementDesc m_CurrentElementDesc;
 
-    VOID            CopyAttributes( const XMLAttribute* pAttributes, UINT uAttributeCount );
+    VOID            CopyAttributesArc( const XMLAttribute* pAttributes, UINT uAttributeCount );				// ========= 解析arc的配置信息
+	VOID            CopyAttributesAppConfig( const XMLAttribute* pAttributes, UINT uAttributeCount );		// ========= 解析本程序的配置信息
     VOID            HandleElementData();
     VOID            HandleElementEnd();
 
@@ -148,9 +150,6 @@ protected:
     VOID            ProcessLightData();
     VOID            ProcessCameraData();
     VOID            ProcessAnimationData();
-
-	INT				GetName(const XMLAttribute* pAttributes, UINT uAttributeCount );
-	INT				GetVlaue(const XMLAttribute* pAttributes, UINT uAttributeCount );
 };
 
 } // namespace ATG

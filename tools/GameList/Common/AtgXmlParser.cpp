@@ -850,7 +850,7 @@ HRESULT XMLParser::MainParseLoop()
 // Name: XMLParser::ParseXMLFile
 // Desc: Builds element data
 //-------------------------------------------------------------------------------------
-HRESULT XMLParser::ParseXMLFile( CONST CHAR *strFilename )
+HRESULT XMLParser::ParseXMLFile( CONST CHAR *strFilename)
 {    
     HRESULT hr;
 

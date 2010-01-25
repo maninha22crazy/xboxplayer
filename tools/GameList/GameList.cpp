@@ -23,12 +23,11 @@
 #include <algorithm>
 #include "AtgXmlFileParser.h"
 #include "AtgXmlWriter.h"
-
-
-
-
-
 #include "CFtpServer.h"
+
+#include <xam.h>
+#include "xfilecache.h"
+
 
 #define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
 typedef struct _STRING 
@@ -51,7 +50,6 @@ extern "C" {
 }
 #endif
 
-// some function pointers 
 void (*XamLoaderLaunchTitle)(const char *, UINT32);
 
 #define XAMCONTENTOPENFILE_ORD (UINT32)0x269
@@ -61,11 +59,52 @@ UINT32 (*XamContentOpenFile)(UINT32, char*, char*,UINT32,UINT32,UINT32,UINT32*);
 UINT32 (*XamContentClose)(char*,UINT32*);
 
 
+
+
 using namespace std; 
 
 CXuiImageElement m_WallImage;
 CXuiList m_List;
 
+
+//--------------------------------------------------------------------------------------
+// Name: debugLog
+// Desc: 输出日志信息到debug.log
+//--------------------------------------------------------------------------------------
+void debugLog(char* output)
+{
+	ofstream writeLog;
+	writeLog.open("game:\\debug.log",ofstream::app);
+	if (writeLog.is_open())
+	{
+		writeLog.write(output,strlen(output));
+		writeLog.write("\n",1);
+	}
+	writeLog.close();
+}
+
+//--------------------------------------------------------------------------------------
+// Name: FileExists
+// Desc: 判断文件是否存在
+//--------------------------------------------------------------------------------------
+bool FileExists(char* strFilename) 
+{
+	struct stat stFileInfo;
+	return stat(strFilename,&stFileInfo) == 0;
+}
+
+//--------------------------------------------------------------------------------------
+// Name: launchX
+// Desc: XLaunchNewImage扩展
+//--------------------------------------------------------------------------------------
+void launchX(char* xfile)
+{
+	XFlushUtilityDrive();
+	XFileCacheInit(XFILECACHE_CLEAR_ALL,0,XFILECACHE_DEFAULT_THREAD,0,1);
+	XFileCacheShutdown();
+	XFlushUtilityDrive();
+	XLaunchNewImage(xfile,0);
+}
 
 //============================================================ xbla begin ==============================================
 UINT32 resolveFunct(char* modname, UINT32 ord)
@@ -122,7 +161,6 @@ UINT32 mountCon(CHAR* szDrive, CHAR* szDevice, CHAR* szPath)
 	return XamContentOpenFile(0xFE, szDrive, szMountPath, 0x4000003,0,0,0);
 }
 
-
 UINT32 unmountCon(CHAR* szDrive)
 {
 	USHORT len;
@@ -139,69 +177,7 @@ UINT32 unmountCon(CHAR* szDrive)
 	return  XamContentClose(szMountPath,0);
 }
 
-
-void listFiles(const char* path)
-{
-	//WIN32_FIND_DATA ffd;
-	//LARGE_INTEGER filesize;
-	//HANDLE hFind = INVALID_HANDLE_VALUE;
-	//CHAR szDir[MAX_PATH];
-	//DWORD dwError=0;
-
-	//sprintf_s(szDir,MAX_PATH,path);
-
-	//hFind = FindFirstFile(szDir, &ffd);
-	//if (INVALID_HANDLE_VALUE == hFind) 
-	//{
-	//	//g_console.Format("Could not stat FS at %s\n", path);
-	//	return;
-	//}
-	//do
-	//{
-	//	if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-	//	{
-	//		//g_console.Format("  %s   <DIR>\n", ffd.cFileName);
-	//	}
-	//	else
-	//	{
-	//		filesize.LowPart = ffd.nFileSizeLow;
-	//		filesize.HighPart = ffd.nFileSizeHigh;
-	//		//g_console.Format("  %s   %ld bytes\n", ffd.cFileName, filesize.QuadPart);
-	//	}
-	//}
-	//while (FindNextFile(hFind, &ffd) != 0);
-	//dwError = GetLastError();
-	//if (dwError != ERROR_NO_MORE_FILES) 
-	//{
-	//	//g_console.Format("dwError: %d\n", dwError);
-	//}
-
-	//FindClose(hFind);
-}
-
-void LaunchXBLA(char* imgPath)
-{
-	char mntpth[] = "dice";
-	char filename[] = "dice:\\default.xex";
-	UINT32 ret;
-
-	ret = mountCon(mntpth, "Hdd", imgPath);
-	////g_console.Format("open returns %d\n",ret);
-
-	listFiles("dice:\\*");
-
-	ret = unmountCon(mntpth);
-	////g_console.Format("close returns %d\n",ret);
-
-	//listFiles("dice:\\*");
-
-	//ret = mountCon(mntpth, "Hdd:", imgpath);
-	////g_console.Format("open returns %d\n",ret);
-
-	//listFiles("dice:\\*");
-	//XLaunchNewImage(filename, 0);
-}
-//============================================================ xbla begin ==============================================
+//============================================================ xbla end ==============================================
 
 
 #define  COMPARE_LENGTH 20  //比较字符串长度为20字节
@@ -277,7 +253,7 @@ VOID SortList(UINT SortType)
 
 //--------------------------------------------------------------------------------------
 // Name: LoadConfig
-// Desc: 读取配置文件GameList.xml
+// Desc: 读取配置文件XexDash.xml
 //--------------------------------------------------------------------------------------
 VOID LoadConfig(VOID)
 {
@@ -293,7 +269,7 @@ VOID LoadConfig(VOID)
 
 //--------------------------------------------------------------------------------------
 // Name: SaveConfig
-// Desc: 保存配置文件GameList.xml
+// Desc: 保存配置文件XexDash.xml
 //--------------------------------------------------------------------------------------
 VOID SaveConfig(VOID)
 {
@@ -376,8 +352,8 @@ bool getGameTitle(char* lstrFileName,char* lpGameName)
 }	
 
 //--------------------------------------------------------------------------------------
-// Name: LoadGameList
-// Desc: 当前目录下的Hidden目录下的第一层目录加载都向量列表里
+// Name: LoadList
+// Desc: 加载列表
 //--------------------------------------------------------------------------------------
 VOID LoadList()
 {
@@ -391,11 +367,18 @@ VOID LoadList()
 	}
 }
 
+
+//--------------------------------------------------------------------------------------
+// Name: LoadXblaList
+// Desc: 读取Xbla列表
+//
 // 000D0000  -arc
 // 00080000  -demo
 // 00070000  -硬盘版游戏
 // 00050000  -1代xbox
 // "Content\\0000000000000000\\ID\\type\\XXXXXXXXXXXXXXXXX"
+//
+//--------------------------------------------------------------------------------------
 void LoadXblaList()
 {
 	// 清空游戏列表
@@ -441,7 +424,6 @@ void LoadXblaList()
 				sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\000D0000\\%s", m_curDevice.deviceName,ffd.cFileName,ffd1.cFileName);
 				nFindType = 1;
 				CloseHandle(hFind1) ;
-				//LaunchXBLA(szDir1);
 			  }
 		  }
 		  else
@@ -567,7 +549,6 @@ void LoadXblaList()
       }
    }
    while (FindNextFile(hFind, &ffd) != 0);
-   //g_console.Format("Count:  %d   <arc + demo>\n", nCount);
 }
 
 //--------------------------------------------------------------------------------------
@@ -626,7 +607,7 @@ VOID LoadGameList()
 
 					pGlist->ftCreationTime = wfd.ftCreationTime;
 					CHAR   strTitleImg[MAX_PATH];
-					sprintf(strTitleImg, "file://%s:/hidden/%s/default.png", m_curDevice.deviceName,wfd.cFileName);
+					sprintf(strTitleImg, "file://%s/hidden/%s/default.png", m_curDevice.deviceName,wfd.cFileName);
 					mbstowcs(pGlist->strTitleImagePath,strTitleImg,strlen(strTitleImg));
 
 					sprintf(pGlist->strFileName, "%s", wfd.cFileName);
@@ -645,7 +626,7 @@ VOID LoadGameList()
 					else
 					{
 						memset(strImg, 0, MAX_PATH);
-						sprintf(strImg, "file://%s:/hidden/%s/default_wall.png", m_curDevice.deviceName,wfd.cFileName);
+						sprintf(strImg, "file://%s/hidden/%s/default_wall.png", m_curDevice.deviceName,wfd.cFileName);
 						mbstowcs(pGlist->strWallPath,strImg,strlen(strImg));
 					}
 
@@ -661,7 +642,7 @@ VOID LoadGameList()
 					else
 					{
 						memset(strIco, 0, MAX_PATH);
-						sprintf(strIco, "file://%s:/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
+						sprintf(strIco, "file://%s/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
 						mbstowcs(pGlist->strIcoPath,strIco,strlen(strIco));
 					}
 
@@ -819,9 +800,6 @@ class CMyMainScene : public CXuiSceneImpl
 		// 挂载Lib支持的6个分区
 		//DeviceMgrLib::MapExternalDrives();
 
-		WCHAR   strTxt[MAX_PATH];
-		memset(strTxt,0,MAX_PATH); 
-		wcsncpy_s( strTxt,m_strGameList,wcslen(m_strGameList));
 		int nCount = sizeof(m_DeviceMappings)/sizeof(m_DeviceMappings[0]);
 		for (int i = 0; i < nCount; i++)
 		{
@@ -838,18 +816,23 @@ class CMyMainScene : public CXuiSceneImpl
 			m_curDevice = m_DeviceMappings[0];
 		}
 
-		wcsncat_s(strTxt,m_curDevice.deviceNameW,wcslen(m_curDevice.deviceNameW));
-		m_lbGameTitle.SetText(strTxt);
 
 		LoadList();
 		SortList(1);		// 排序
 		RefreshPageInfo();
 		
+		WCHAR   strTxt[MAX_PATH];
+		memset(strTxt,0,MAX_PATH); 
+		wcsncat_s(strTxt,m_curDevice.deviceNameW,wcslen(m_curDevice.deviceNameW));
 		m_ConfigNode.strDevice = strTxt;
 		
 		return isOk;
 	}
 
+	//--------------------------------------------------------------------------------------
+	// Name: SetGameWall
+	// Desc: 设置游戏背景图、读取ARC的信息
+	//--------------------------------------------------------------------------------------
 	VOID SetGameWall()
 	{
 		if(m_ConfigNode.nGameType == 0)
@@ -1028,20 +1011,23 @@ class CMyMainScene : public CXuiSceneImpl
 			char mntpth[] = "dice";
 			UINT32 ret;
 
-			//char strDevice[MAX_PATH];
-			//memset(strDevice, 0, MAX_PATH);
-			//sprintf(strDevice, "%s", m_curDevice.deviceName);
-
-			//LaunchXBLA("Content\\0000000000000000\\5841085C\\000D0000\\5841085C01234567");
-
 			unmountCon(mntpth);
 			ret = mountCon(mntpth, m_curDevice.deviceName, m_GameList[m_nCurSel].strPath);
 
 			if(ret == 0)
 			{
-				listFiles("dice:\\*");
-				// 设置小图
-				m_GameIcoImage.SetImagePath(L"dice:\\icon.png");
+				// 解析xml，读取信息
+				//ATG::XMLParser parser;
+				ATG::XmlFileParser xmlFile;
+				ArcadeInfo ArcadeInfoNode;						// 当前选中的arc信息
+				//parser.RegisterSAXCallbackInterface( &xmlFile );
+				HRESULT hr = xmlFile.LoadXMLFile( m_strConfigPath,&ArcadeInfoNode,1);
+
+				if( SUCCEEDED( hr ) )
+				{
+					// 设置小图
+					m_GameIcoImage.SetImagePath(ArcadeInfoNode.strImagePath);
+				}
 			}
 		}
 
@@ -1050,7 +1036,7 @@ class CMyMainScene : public CXuiSceneImpl
 	}
 
 	//----------------------------------------------------------------------------------
-	// 刷新设备列表
+	// 刷新设备列表（暂不支持获得各个设备的连接状态）
 	//----------------------------------------------------------------------------------
 	VOID RefashDeviceList()
 	{
@@ -1081,25 +1067,16 @@ class CMyMainScene : public CXuiSceneImpl
 		GetChildById( L"listMenu", &m_listMenu );
 		GetChildById( L"listGames", &m_List );
 		GetChildById( L"listLanguage", &m_listLanguage );
-		
 		GetChildById( L"AppWallImage", &m_AppWallImage );
 		GetChildById( L"WallImage", &m_WallImage );
 		GetChildById( L"GameImage", &m_GameImage );
 		GetChildById( L"GameIcoImage", &m_GameIcoImage );
 		GetChildById( L"BottomImage", &m_BottomImage );
-
-		
 		GetChildById( L"labelPage", &m_Page );
-
-		GetChildById( L"labelGameTitle", &m_lbGameTitle );
-
 		GetChildById( L"labelValueTitleId", &m_labelValueTitleId );
 		GetChildById( L"labelValueTitleName", &m_labelValueTitleName );
-
 		GetChildById( L"panelMenu", &m_panelMenu );
 		GetChildById( L"labelValueInfo", &m_labelValueInfo );
-		
-
 		GetChildById( L"ImageA", &m_ImageA );
 		GetChildById( L"ImageB", &m_ImageB );
 		GetChildById( L"ImageLB", &m_ImageLB );
@@ -1126,33 +1103,29 @@ class CMyMainScene : public CXuiSceneImpl
 		{
 			m_AppWallImage.SetImagePath(m_strAppWallPath);
 		}
-		
 
-		LPCWSTR ss = m_lbGameTitle.GetText();
-		wcsncpy_s( m_strGameList, ss, wcslen(ss) );
+		LPCWSTR str = m_listMenu.GetText(2);
+		wcsncpy_s( m_strShowWall, str, wcslen(str) );
 
-		ss = m_listMenu.GetText(2);
-		wcsncpy_s( m_strShowWall, ss, wcslen(ss) );
-
-		ss = m_listMenu.GetText(3);
-		wcsncpy_s( m_strShowNewWall, ss, wcslen(ss) );
+		str = m_listMenu.GetText(3);
+		wcsncpy_s( m_strShowNewWall, str, wcslen(str) );
 		
 		if(m_ConfigNode.nShowWall)
 		{
-			m_listMenu.SetText(2,StrAdd(m_strShowWall,L"[OFF]"));
+			m_listMenu.SetText(3,StrAdd(m_strShowWall,L"[OFF]"));
 		}
 		else
 		{
-			m_listMenu.SetText(2,StrAdd(m_strShowWall,L"[ON]"));
+			m_listMenu.SetText(3,StrAdd(m_strShowWall,L"[ON]"));
 		}
 
 		if(m_ConfigNode.nShowNewWall)
 		{
-			m_listMenu.SetText(3,StrAdd(m_strShowNewWall,L"[OFF]"));
+			m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[OFF]"));
 		}
 		else
 		{
-			m_listMenu.SetText(3,StrAdd(m_strShowNewWall,L"[ON]"));
+			m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[ON]"));
 		}
 
 
@@ -1195,18 +1168,18 @@ class CMyMainScene : public CXuiSceneImpl
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
 		// edit:使用SONIC3D封装的api date:2009-12-23 by:EME
-		//XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
+		//launchX( m_GameList[m_nCurSel].strPath, 0 );
 		if( hObjPressed == m_List )
 		{
 			bHandled = TRUE;
 
 			if(m_ConfigNode.nGameType == 0)
 			{
-				XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
+				launchX( m_GameList[m_nCurSel].strPath);
 			}
 			else
 			{
-				XLaunchNewImage("dice:\\default.xex",0);
+				launchX("dice:\\default.xex");
 			}
 			//DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
 		}
@@ -1244,7 +1217,7 @@ class CMyMainScene : public CXuiSceneImpl
 					{
 						m_ConfigNode.nShowWall = 0;
 						m_WallImage.SetImagePath(L"");
-						m_listMenu.SetText(2,StrAdd(m_strShowWall,L"[ON]"));
+						m_listMenu.SetText(3,StrAdd(m_strShowWall,L"[ON]"));
 					}
 					else
 					{
@@ -1253,7 +1226,7 @@ class CMyMainScene : public CXuiSceneImpl
 						{
 							m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
 						}
-						m_listMenu.SetText(2,StrAdd(m_strShowWall,L"[OFF]"));
+						m_listMenu.SetText(3,StrAdd(m_strShowWall,L"[OFF]"));
 					}
 					break;
 				case 4:
@@ -1261,7 +1234,7 @@ class CMyMainScene : public CXuiSceneImpl
 					{
 						m_ConfigNode.nShowNewWall = 0;
 						m_WallImage.SetImagePath(L"");
-						m_listMenu.SetText(3,StrAdd(m_strShowNewWall,L"[ON]"));
+						m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[ON]"));
 
 						m_ConfigNode.strWallPath = L"";
 						m_AppWallImage.SetImagePath(m_strAppWallPath);
@@ -1274,17 +1247,17 @@ class CMyMainScene : public CXuiSceneImpl
 							m_ConfigNode.strWallPath = m_GameList[m_nCurSel].strWallPath;
 							m_AppWallImage.SetImagePath(m_ConfigNode.strWallPath);
 						}
-						m_listMenu.SetText(3,StrAdd(m_strShowNewWall,L"[OFF]"));
+						m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[OFF]"));
 					}
 					m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
 					break;
 				case 5:				// 返回XDK界面
 					SaveConfig();
-					XLaunchNewImage( XLAUNCH_KEYWORD_DEFAULT_APP, 0 );
+					launchX( XLAUNCH_KEYWORD_DEFAULT_APP );
 					break;
 				case 6:				// 返回DASH界面
 					SaveConfig();
-					XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
+					launchX( XLAUNCH_KEYWORD_DASH);
 					break;
 			}
 		}
@@ -1476,7 +1449,7 @@ class CMyMainScene : public CXuiSceneImpl
 					break;
 				case VK_PAD_BACK:									// 返回DASH界面
 					SaveConfig();
-					XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
+					launchX( XLAUNCH_KEYWORD_DASH);
 					break;
 				}
 
@@ -1618,12 +1591,10 @@ VOID __cdecl main()
 	hddexist = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
 	hddexist = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
 
-	//if(!hddexist)
-	//	return;
 
 	CFtpServer FtpServer;
 	// 数据socket端口[1025,9000]
-	FtpServer.SetDataPortRange( 1029, 9000 ); 
+	FtpServer.SetDataPortRange( 1025, 9000 ); 
 	CFtpServer::UserNode *FtpUser = FtpServer.AddUser( "xbox", "xbox", "/");
 
 	if( FtpUser ) 

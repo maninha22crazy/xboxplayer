@@ -23,10 +23,9 @@ INT m_nPageSize		= 0;				//	页的可显示项
 INT m_nCountPage	= 1;				//	总页数
 BOOL m_bSortLess	= false;			//	升降序
 
-CHAR* m_strConfigPath	= "game:\\GameList.xml";	// 配置文件位置
+CHAR* m_strConfigPath	= "Hdd\\XexDash.xml";	// 配置文件位置
 WCHAR* m_strAppWallPath	= L"file://game:/media/background.jpg";	// 背景图文件位置
 
-WCHAR m_strGameList[256];					//	游戏列表标题
 WCHAR m_strShowWall[256];					//	背景打开关闭菜单标题
 WCHAR m_strShowNewWall[256];				//	设置背景打开关闭菜单标题
 
