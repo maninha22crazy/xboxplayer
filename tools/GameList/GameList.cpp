@@ -21,40 +21,188 @@
 #include "GameList.h"
 #include "..\DeviceMgrLib\DeviceMgrLib.h"
 #include <algorithm>
-#include "Glbs.h"
 #include "AtgXmlFileParser.h"
 #include "AtgXmlWriter.h"
 
 
+
+
+
+#include "CFtpServer.h"
+
+#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
+typedef struct _STRING 
+{        
+	USHORT Length;        
+	USHORT MaximumLength;       
+	PCHAR Buffer;    
+} STRING;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	HRESULT __stdcall ObCreateSymbolicLink( STRING*, STRING*);
+	HRESULT __stdcall ObDeleteSymbolicLink( STRING* );
+	UINT32 __stdcall XexGetModuleHandle(char* module, PVOID hand);
+	UINT32 __stdcall XexGetProcedureAddress(UINT32 hand ,UINT32, PVOID);
+
+#ifdef __cplusplus
+}
+#endif
+
+// some function pointers 
+void (*XamLoaderLaunchTitle)(const char *, UINT32);
+
+#define XAMCONTENTOPENFILE_ORD (UINT32)0x269
+UINT32 (*XamContentOpenFile)(UINT32, char*, char*,UINT32,UINT32,UINT32,UINT32*);
+
+#define XAMCONTENTCLOSE_ORD (UINT32)0x25a
+UINT32 (*XamContentClose)(char*,UINT32*);
+
+
 using namespace std; 
 
-//
-//HANDLE g_hSetImageThread;
 CXuiImageElement m_WallImage;
 CXuiList m_List;
-//UINT m_nCurImage = -1;
-//
-//
-//DWORD WINAPI SetImageThreadProc(LPVOID lpParameter)
-//{
-//	while(1)
-//	{
-//		int n = m_nCurSel;
-//		if(m_nCurImage != n)
-//		{		
-//			m_WallImage.SetImagePath(L"");
-//			if(m_ConfigNode.nShowWall && n >= 0)
-//			{
-//				m_WallImage.SetImagePath(m_GameList[n].strWallPath);
-//			}
-//			m_nCurImage = n;
-//		}
-//		else
-//		{
-//			Sleep(100);
-//		}
-//	}
-//}
+
+
+//============================================================ xbla begin ==============================================
+UINT32 resolveFunct(char* modname, UINT32 ord)
+{
+	UINT32 ptr32=0, ret=0, ptr2=0;
+	ret = XexGetModuleHandle(modname, &ptr32); //xboxkrnl.exe xam.dll?
+	if(ret == 0)
+	{
+		ret = XexGetProcedureAddress(ptr32, ord, &ptr2 );
+		if(ptr2 != 0)
+			return ptr2;
+	}
+	return 0;
+}
+
+HRESULT Mount(CHAR* szDrive, CHAR* szDevice)
+{
+	CHAR * szSourceDevice;
+	CHAR szDestinationDrive[MAX_PATH];
+	USHORT len;
+	szSourceDevice = szDevice;
+
+	sprintf_s(szDestinationDrive,MAX_PATH,"\\??\\%s",szDrive);
+	len = (USHORT)strlen(szSourceDevice);
+	STRING DeviceName =
+	{
+		len,
+		len + 1,
+		szSourceDevice
+	};
+	len = (USHORT)strlen(szDestinationDrive);
+	STRING LinkName =
+	{
+		len,
+		len + 1,
+		szDestinationDrive
+	};
+	ObDeleteSymbolicLink( &DeviceName );
+	return ( HRESULT )ObCreateSymbolicLink(&LinkName, &DeviceName);
+}
+
+UINT32 mountCon(CHAR* szDrive, CHAR* szDevice, CHAR* szPath)
+{
+	UINT32 ret;
+	CHAR szMountPath[MAX_PATH];
+	if(XamContentOpenFile == 0)
+	{
+		ret = resolveFunct("xam.xex", XAMCONTENTOPENFILE_ORD); 
+		XamContentOpenFile = (UINT32 (__cdecl *)(UINT32, char*, char*,UINT32,UINT32,UINT32,UINT32*))ret;
+		if(XamContentOpenFile == 0)
+			return ERROR_INVALID_HANDLE;
+	}
+	sprintf_s(szMountPath,MAX_PATH,"\\??\\%s\\%s",szDevice,szPath);
+	return XamContentOpenFile(0xFE, szDrive, szMountPath, 0x4000003,0,0,0);
+}
+
+
+UINT32 unmountCon(CHAR* szDrive)
+{
+	USHORT len;
+	UINT32 ret;
+	CHAR szMountPath[MAX_PATH];
+	if(XamContentClose == 0)
+	{
+		ret = resolveFunct("xam.xex", XAMCONTENTCLOSE_ORD);
+		XamContentClose = (UINT32 (__cdecl *)(char *,UINT32 *))ret;
+		if(XamContentClose == 0)
+			return ERROR_INVALID_HANDLE;
+	}
+	sprintf_s(szMountPath,MAX_PATH,"\\??\\%s",szDrive);
+	return  XamContentClose(szMountPath,0);
+}
+
+
+void listFiles(const char* path)
+{
+	//WIN32_FIND_DATA ffd;
+	//LARGE_INTEGER filesize;
+	//HANDLE hFind = INVALID_HANDLE_VALUE;
+	//CHAR szDir[MAX_PATH];
+	//DWORD dwError=0;
+
+	//sprintf_s(szDir,MAX_PATH,path);
+
+	//hFind = FindFirstFile(szDir, &ffd);
+	//if (INVALID_HANDLE_VALUE == hFind) 
+	//{
+	//	//g_console.Format("Could not stat FS at %s\n", path);
+	//	return;
+	//}
+	//do
+	//{
+	//	if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	//	{
+	//		//g_console.Format("  %s   <DIR>\n", ffd.cFileName);
+	//	}
+	//	else
+	//	{
+	//		filesize.LowPart = ffd.nFileSizeLow;
+	//		filesize.HighPart = ffd.nFileSizeHigh;
+	//		//g_console.Format("  %s   %ld bytes\n", ffd.cFileName, filesize.QuadPart);
+	//	}
+	//}
+	//while (FindNextFile(hFind, &ffd) != 0);
+	//dwError = GetLastError();
+	//if (dwError != ERROR_NO_MORE_FILES) 
+	//{
+	//	//g_console.Format("dwError: %d\n", dwError);
+	//}
+
+	//FindClose(hFind);
+}
+
+void LaunchXBLA(char* imgPath)
+{
+	char mntpth[] = "dice";
+	char filename[] = "dice:\\default.xex";
+	UINT32 ret;
+
+	ret = mountCon(mntpth, "Hdd", imgPath);
+	////g_console.Format("open returns %d\n",ret);
+
+	listFiles("dice:\\*");
+
+	ret = unmountCon(mntpth);
+	////g_console.Format("close returns %d\n",ret);
+
+	//listFiles("dice:\\*");
+
+	//ret = mountCon(mntpth, "Hdd:", imgpath);
+	////g_console.Format("open returns %d\n",ret);
+
+	//listFiles("dice:\\*");
+	//XLaunchNewImage(filename, 0);
+}
+//============================================================ xbla begin ==============================================
+
 
 #define  COMPARE_LENGTH 20  //比较字符串长度为20字节
 //--------------------------------------------------------------------------------------
@@ -97,9 +245,9 @@ bool greaterCreateTime(const GameNode& s1,const GameNode& s2)
 // Name: SortList
 // Desc: 对游戏列表进行排序
 //--------------------------------------------------------------------------------------
-VOID SortList(GameList *m_GameList, UINT SortType)
+VOID SortList(UINT SortType)
 {
-	if(m_GameList->size() == 0)
+	if(m_GameList.size() == 0)
 	{
 		return;
 	}
@@ -107,25 +255,24 @@ VOID SortList(GameList *m_GameList, UINT SortType)
 	{
 		if(m_bSortLess)
 		{
-			sort(m_GameList->begin(), m_GameList->end(),lessCreateTime);
+			sort(m_GameList.begin(), m_GameList.end(),lessCreateTime);
 		}
 		else
 		{
-			sort(m_GameList->begin(), m_GameList->end(),greaterGameName);
+			sort(m_GameList.begin(), m_GameList.end(),greaterGameName);
 		}
 	}
 	else if(SortType == 1)
 	{
 		if(m_bSortLess)
 		{
-			sort(m_GameList->begin(), m_GameList->end(),lessGameName);
+			sort(m_GameList.begin(), m_GameList.end(),lessGameName);
 		}
 		else
 		{
-			sort(m_GameList->begin(), m_GameList->end(),greaterGameName);
+			sort(m_GameList.begin(), m_GameList.end(),greaterGameName);
 		}
 	}
-	m_bSortLess = !m_bSortLess;
 }
 
 //--------------------------------------------------------------------------------------
@@ -150,6 +297,9 @@ VOID LoadConfig(VOID)
 //--------------------------------------------------------------------------------------
 VOID SaveConfig(VOID)
 {
+
+	bool ret = CreateDirectory( "Hdd\\XEXDASH", NULL);
+
 	ATG::XMLWriter parser;
 
 	parser.Initialize( m_strConfigPath );
@@ -229,11 +379,206 @@ bool getGameTitle(char* lstrFileName,char* lpGameName)
 // Name: LoadGameList
 // Desc: 当前目录下的Hidden目录下的第一层目录加载都向量列表里
 //--------------------------------------------------------------------------------------
-VOID LoadGameList(GameList *m_GameList)
+VOID LoadList()
+{
+	switch(m_ConfigNode.nGameType)
+	{
+	case 1:
+		LoadXblaList();
+		break;
+	default:
+		LoadGameList();
+	}
+}
+
+// 000D0000  -arc
+// 00080000  -demo
+// 00070000  -硬盘版游戏
+// 00050000  -1代xbox
+// "Content\\0000000000000000\\ID\\type\\XXXXXXXXXXXXXXXXX"
+void LoadXblaList()
+{
+	// 清空游戏列表
+	m_GameList.clear();
+
+   WIN32_FIND_DATA ffd;
+   WIN32_FIND_DATA ffd1;
+   HANDLE hFind = INVALID_HANDLE_VALUE;
+   HANDLE hFind1 = INVALID_HANDLE_VALUE;
+   DWORD dwError=0;
+
+   int nFindType = 0;
+    struct stat st;
+
+	int nCount = 0;
+   char szDir[MAX_PATH];
+   char szDir1[MAX_PATH];
+   memset(szDir, 0, MAX_PATH);
+   memset(szDir1, 0, MAX_PATH);
+   sprintf(szDir, "%s\\Content\\0000000000000000\\*", m_curDevice.deviceName);
+
+   hFind = FindFirstFile(szDir, &ffd);
+   if (INVALID_HANDLE_VALUE == hFind) 
+   {
+      return;
+   }
+   do
+   {
+      if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      {
+		  // 目录
+		  memset(szDir1, 0, MAX_PATH);
+		  sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\000D0000", m_curDevice.deviceName,ffd.cFileName);
+		  nFindType = 0;
+		  if( stat( szDir1, &st ) == 0 && S_ISDIR( st.st_mode ) )
+		  {
+			  memset(szDir1, 0, MAX_PATH);
+			  sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\000D0000\\*", m_curDevice.deviceName,ffd.cFileName);
+			  hFind1 = FindFirstFile(szDir1, &ffd1);
+			  if (hFind1 != INVALID_HANDLE_VALUE && !(ffd1.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			  {
+				memset(szDir1, 0, MAX_PATH);
+				sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\000D0000\\%s", m_curDevice.deviceName,ffd.cFileName,ffd1.cFileName);
+				nFindType = 1;
+				CloseHandle(hFind1) ;
+				//LaunchXBLA(szDir1);
+			  }
+		  }
+		  else
+		  {
+			  memset(szDir1, 0, MAX_PATH);
+			  sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\00080000\\*", m_curDevice.deviceName,ffd.cFileName);
+			  if( stat( szDir1, &st ) == 0 && S_ISDIR( st.st_mode ) )
+			  {
+				   hFind1 = FindFirstFile(szDir1, &ffd1);
+				  if (hFind1 != INVALID_HANDLE_VALUE && !(ffd1.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+				  {
+					memset(szDir1, 0, MAX_PATH);
+					sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\00080000\\%s", m_curDevice.deviceName,ffd.cFileName,ffd1.cFileName);
+					nFindType = 2;
+					CloseHandle(hFind1) ;
+				  }
+			  }
+			  else
+			  {
+				  memset(szDir1, 0, MAX_PATH);
+				  sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\00070000\\*", m_curDevice.deviceName,ffd.cFileName);
+				  if( stat( szDir1, &st ) == 0 && S_ISDIR( st.st_mode ) )
+				  {
+					   hFind1 = FindFirstFile(szDir1, &ffd1);
+					  if (hFind1 != INVALID_HANDLE_VALUE && !(ffd1.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+					  {
+						memset(szDir1, 0, MAX_PATH);
+						sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\00070000\\%s", m_curDevice.deviceName,ffd.cFileName,ffd1.cFileName);
+						nFindType = 3;
+						CloseHandle(hFind1) ;
+					  }
+				  }
+				  else
+				  {
+					  memset(szDir1, 0, MAX_PATH);
+					  sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\00050000\\*", m_curDevice.deviceName,ffd.cFileName);
+					  if( stat( szDir1, &st ) == 0 && S_ISDIR( st.st_mode ) )
+					  {
+						   hFind1 = FindFirstFile(szDir1, &ffd1);
+						  if (hFind1 != INVALID_HANDLE_VALUE && !(ffd1.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+						  {
+							memset(szDir1, 0, MAX_PATH);
+							sprintf(szDir1, "%s\\Content\\0000000000000000\\%s\\00050000\\%s", m_curDevice.deviceName,ffd.cFileName,ffd1.cFileName);
+							nFindType = 4;
+							CloseHandle(hFind1) ;
+						  }
+					  }
+				  }
+			  }
+		  }
+		  if(nFindType != 0)
+		  {
+				BYTE  m_pReadBuf[ 0x1792 + 2 ];
+				m_pReadBuf[ 0 ] = '\0';
+				m_pReadBuf[ 1 ] = '\0'; 
+				hFind1 = CreateFile(szDir1, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );  
+
+				if( hFind1 != INVALID_HANDLE_VALUE )
+				{        
+					DWORD NChars;
+					if( !ReadFile( hFind1, m_pReadBuf, 0x1792, &NChars, NULL ))
+					{
+						CloseHandle(hFind1);
+						return;
+					}
+					CloseHandle(hFind1) ;
+
+					GameNode *pGNode;
+					pGNode = (GameNode *)malloc( sizeof(GameNode));
+					memset(pGNode, 0,  sizeof(GameNode));
+
+					ofstream out2;
+					m_pReadBuf[ NChars ] = '\0';
+					m_pReadBuf[ NChars + 1] = '\0';
+
+
+					char *ptr;
+					size_t length;
+
+					//================================== 提取ID begin ==================================================
+					ptr =  (CHAR *)m_pReadBuf + nTitleID;
+					swprintf(pGNode->strTitleID, L"%-8X", ReadUInt32(ptr));
+					//================================== 提取ID end ==================================================
+
+
+					//================================== 提取标题 begin ==================================================
+					ptr =  (CHAR *)m_pReadBuf + nContentTitle;
+					int n = 0;
+					int j =0;
+					while(n < 0x40 )
+					{
+						BYTE bChar = (BYTE)ptr[n++];
+						if(bChar != 0)
+						{
+							pGNode->strGameTitle[j++] = (CHAR)bChar;
+						}
+					}
+					pGNode->strGameTitle[j] = '\0';
+					wcscpy(pGNode->strName,pGNode->strGameTitle);
+
+					//================================== 提取标题 end ==================================================
+
+					memset(pGNode->strPath, 0, MAX_PATH);
+
+					switch(nFindType)
+					{
+					case 1:
+						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\000D0000\\%s", ffd.cFileName,ffd1.cFileName);
+						break;
+					case 2:
+						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\000D0000\\%s", ffd.cFileName,ffd1.cFileName);
+						break;
+					case 3:
+						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\00070000\\%s", ffd.cFileName,ffd1.cFileName);
+						break;
+					case 4:
+						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\00050000\\%s", ffd.cFileName,ffd1.cFileName);
+						break;
+					}
+					m_GameList.push_back(*pGNode);
+				}
+		  }
+      }
+   }
+   while (FindNextFile(hFind, &ffd) != 0);
+   //g_console.Format("Count:  %d   <arc + demo>\n", nCount);
+}
+
+//--------------------------------------------------------------------------------------
+// Name: LoadGameList
+// Desc: 当前目录下的Hidden目录下的第一层目录加载都向量列表里
+//--------------------------------------------------------------------------------------
+VOID LoadGameList()
 {
 	char strFind[MAX_PATH];
 	memset(strFind, 0, MAX_PATH);
-	sprintf(strFind, "%s:\\hidden\\*", m_curDevice.deviceName);
+	sprintf(strFind, "%s\\hidden\\*", m_curDevice.deviceName);
 
 	char lpNewNameBuf[MAX_PATH];
 	char lpGameName[MAX_PATH];
@@ -241,7 +586,7 @@ VOID LoadGameList(GameList *m_GameList)
 	HANDLE hFind;
 
 	// 清空游戏列表
-	m_GameList->clear();
+	m_GameList.clear();
 	hFind = FindFirstFile( strFind, &wfd );
 
 	HANDLE hFileFind;
@@ -251,7 +596,7 @@ VOID LoadGameList(GameList *m_GameList)
 		{
 			if(FILE_ATTRIBUTE_DIRECTORY==wfd.dwFileAttributes){
 				memset(lpNewNameBuf, 0, MAX_PATH);
-				sprintf(lpNewNameBuf, "%s:\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
+				sprintf(lpNewNameBuf, "%s\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
 				HANDLE hFile = CreateFile(lpNewNameBuf,    // file to open
 					GENERIC_READ,           // open for reading
 					FILE_SHARE_READ,        // share for reading
@@ -267,7 +612,7 @@ VOID LoadGameList(GameList *m_GameList)
 					memset(pGlist, 0,  sizeof(GameNode));
 
 					memset(lpNewNameBuf, 0, MAX_PATH);
-					sprintf(lpNewNameBuf, "%s:\\hidden\\%s\\default.txt", m_curDevice.deviceName,wfd.cFileName);
+					sprintf(lpNewNameBuf, "%s\\hidden\\%s\\default.txt", m_curDevice.deviceName,wfd.cFileName);
 					if(getGameTitle(lpNewNameBuf,lpGameName))
 					{
 						memset(lpNewNameBuf, 0, MAX_PATH);
@@ -290,7 +635,7 @@ VOID LoadGameList(GameList *m_GameList)
 					bool findAll = true;
 					CHAR   strImg[MAX_PATH];
 					memset(strImg, 0, MAX_PATH);
-					sprintf(strImg, "%s:\\hidden\\%s\\default_wall.png", m_curDevice.deviceName,wfd.cFileName);
+					sprintf(strImg, "%s\\hidden\\%s\\default_wall.png", m_curDevice.deviceName,wfd.cFileName);
 
 					hFileFind = CreateFile( strImg, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
 					if( hFileFind == INVALID_HANDLE_VALUE )
@@ -306,7 +651,7 @@ VOID LoadGameList(GameList *m_GameList)
 
 					CHAR   strIco[MAX_PATH];
 					memset(strIco, 0, MAX_PATH);
-					sprintf(strIco, "%s:/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
+					sprintf(strIco, "%s/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
 
 					hFileFind = CreateFile( strIco, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
 					if( hFileFind = INVALID_HANDLE_VALUE )
@@ -321,12 +666,12 @@ VOID LoadGameList(GameList *m_GameList)
 					}
 
 					memset(pGlist->strPath, 0, MAX_PATH);
-					sprintf(pGlist->strPath, "%s:\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
+					sprintf(pGlist->strPath, "%s\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
 
 					pGlist->bIsRegion = findAll;
 					//==================================== 查找是否存在游戏背景图 end ================================
 
-					m_GameList->push_back(*pGlist);
+					m_GameList.push_back(*pGlist);
 					CloseHandle(hFile);
 				}			
 			}
@@ -392,6 +737,7 @@ class CMyMainScene : public CXuiSceneImpl
 	CXuiTextElement m_Value;
 	CXuiTextElement m_Page;
 	CXuiList m_listDevice;
+	CXuiList m_listGameType;
 	CXuiList m_listMenu;
 	CXuiList m_listLanguage;
 
@@ -471,7 +817,7 @@ class CMyMainScene : public CXuiSceneImpl
 	{
 		bool isOk = false;
 		// 挂载Lib支持的6个分区
-		DeviceMgrLib::MapExternalDrives();
+		//DeviceMgrLib::MapExternalDrives();
 
 		WCHAR   strTxt[MAX_PATH];
 		memset(strTxt,0,MAX_PATH); 
@@ -495,319 +841,225 @@ class CMyMainScene : public CXuiSceneImpl
 		wcsncat_s(strTxt,m_curDevice.deviceNameW,wcslen(m_curDevice.deviceNameW));
 		m_lbGameTitle.SetText(strTxt);
 
-		LoadGameList(&m_GameList);
-		SortList(&m_GameList,1);		// 排序
+		LoadList();
+		SortList(1);		// 排序
 		RefreshPageInfo();
+		
+		m_ConfigNode.strDevice = strTxt;
 		
 		return isOk;
 	}
 
-	//----------------------------------------------------------------------------------
-	// 设置游戏图片
-	//----------------------------------------------------------------------------------
-	//VOID SetGameWall()
-	//{
-		//if(!m_GameList[m_nCurSel].bIsRegion)
-		//{
-		//	m_GameList[m_nCurSel].bIsRegion = true;
-		//	LPWSTR lpGameNameW = new wchar_t[MAX_PATH];   //Nombre del fichero caracteres anchos
-
-		//	string sNxeartFile;
-		//	char cNxeartFile[MAX_PATH];
-
-		//	sprintf(cNxeartFile, "%s:\\hidden\\%s\\nxeart", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
-
-
-		//	ifstream in;
-		//	stringstream out;
-		//	string content;
-		//	size_t start, end, length;
-
-		//	in.open(cNxeartFile, ios::in | ios::binary);
-		//	if(in.good())
-		//	{
-		//		CHAR startCode = 0xFFD8;
-		//		CHAR endCode = 0xFFD9;
-
-		//		out << in.rdbuf();
-		//		content=out.str();
-
-		//		string gameName = content.substr( 5778, 40 );
-		//		for (size_t i = 0; i < gameName.length(); i++)
-		//		{
-		//			if (gameName.at(i) == 0x00)
-		//				gameName.erase(i, 1);
-		//		}
-		//		gameName._Copy(m_GameList[m_nCurSel].strGameTitle, gameName.length(), gameName.length());
-		//		m_GameList[m_nCurSel].strGameTitle[gameName.length()] = '/0';
-
-		//		ofstream out2;
-		//		if(m_GameList[m_nCurSel].strIcoPath[0] == 0)					// 提取小图
-		//		{
-		//			start = content.find("PNG");
-		//			start -= 1;
-		//			end = content.find("IEND");
-		//			end += 7;
-		//			length = end - start;
-		//			string icon = content.substr( start, length );
-
-		//			sprintf_s( m_GameList[m_nCurSel].strIcoPath,"%s:\\hidden\\%s\\default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName );
-		//			out2.open(m_GameList[m_nCurSel].strIcoPath, ios::out | ios::binary);
-		//			out2.write(icon.c_str(), icon.length());
-		//			out2.close();
-		//		}
-		//		
-		//		if(m_GameList[m_nCurSel].strWallPath[0] == 0)					// 提取大图
-		//		{
-		//			start = content.find("JFIF",start);
-		//			if(start > 0)
-		//			{
-		//				end = content.find(endCode, start );
-		//				start -= 6;
-		//			}
-		//			else
-		//			{
-		//				end = 2004881;
-		//				start = 57344;
-		//			}
-		//			string wallpaperHD = content.substr( start, length );
-
-		//			sprintf_s( m_GameList[m_nCurSel].strWallPath,"%s:\\hidden\\%s\\default.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName );
-		//			out2.open(m_GameList[m_nCurSel].strWallPath, ios::out | ios::binary);
-		//			out2.write(wallpaperHD.c_str(), wallpaperHD.length());
-		//			out2.close();
-		//		}
-		//	}
-		//}
-
-		//memset(m_lpImgPathBuf, 0, MAX_PATH);
-		//memset(m_GameList[m_nCurSel].strWallPath, 0, MAX_PATH);
-		//sprintf(m_GameList[m_nCurSel].strWallPath, "file://%s:/hidden/%s/default.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
-		//mbstowcs(m_lpImgPathBuf,m_GameList[m_nCurSel].strWallPath,strlen(m_GameList[m_nCurSel].strWallPath));
-		//m_GameImage.SetImagePath(m_lpImgPathBuf);
-
-		//memset(m_lpImgPathBuf, 0, MAX_PATH);
-		//memset(m_GameList[m_nCurSel].strIcoPath, 0, MAX_PATH);
-		//sprintf(m_GameList[m_nCurSel].strIcoPath, "file://%s:/hidden/%s/default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
-		//mbstowcs(m_lpImgPathBuf,m_GameList[m_nCurSel].strIcoPath,strlen(m_GameList[m_nCurSel].strIcoPath));
-		//m_List.SetImage(m_nCurSel,m_lpImgPathBuf);
-	//}
-
-
-	//----------------------------------------------------------------------------------
-	// 设置游戏图片
-	//----------------------------------------------------------------------------------
 	VOID SetGameWall()
 	{
-		if(!m_GameList[m_nCurSel].bIsRegion)
+		if(m_ConfigNode.nGameType == 0)
 		{
-			BYTE  m_pReadBuf[ BUFSIZE + 2 ];
-			m_GameList[m_nCurSel].bIsRegion = true;
-			CHAR cNxeartFile[MAX_PATH];
-			sprintf(cNxeartFile, "%s:\\hidden\\%s\\nxeart", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
+			if(!m_GameList[m_nCurSel].bIsRegion)
+			{
+				BYTE  m_pReadBuf[ BUFSIZE + 2 ];
+				m_GameList[m_nCurSel].bIsRegion = true;
+				CHAR cNxeartFile[MAX_PATH];
+				sprintf(cNxeartFile, "%s\\hidden\\%s\\nxeart", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
 
-			m_pReadBuf[ 0 ] = '\0';
-			m_pReadBuf[ 1 ] = '\0'; 
-			HANDLE m_hFile = CreateFile(cNxeartFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );  
+				m_pReadBuf[ 0 ] = '\0';
+				m_pReadBuf[ 1 ] = '\0'; 
+				HANDLE m_hFile = CreateFile(cNxeartFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );  
 
-			CHAR	strIcoPath[MAX_PATH];
-			CHAR	strWallPath[MAX_PATH];
+				CHAR	strIcoPath[MAX_PATH];
+				CHAR	strWallPath[MAX_PATH];
 
-			if( m_hFile != INVALID_HANDLE_VALUE )
-			{        
-				DWORD NChars;
-				if( !ReadFile( m_hFile, m_pReadBuf, BUFSIZE, &NChars, NULL ))
-				{
-					CloseHandle(m_hFile);
-					return;
-				}
-				CloseHandle(m_hFile) ;
-
-				ofstream out2;
-				m_pReadBuf[ NChars ] = '\0';
-				m_pReadBuf[ NChars + 1] = '\0';
-
-				BYTE startCodeJpeg[] = {0xFF,0xD8};
-				BYTE endCodeJpeg[] = {0xFF,0xD9};
-
-				BYTE startCodePng[] = {0x89,0x50};
-				BYTE endCodePng[] = {0xAE,0x42,0x60,0x82};
-
-				char *ptr = (CHAR *)m_pReadBuf;
-				char *ptrEnd = ptr + BUFSIZE + 2;
-				char *start_ptr,*end_ptr;
-				size_t length;
-
-				//================================== 提取ID begin ==================================================
-				ptr =  (CHAR *)m_pReadBuf + nTitleID;
-				swprintf(m_GameList[m_nCurSel].strTitleID, L"%-8X", ReadUInt32(ptr));
-				//================================== 提取ID end ==================================================
-
-
-				//================================== 提取标题 begin ==================================================
-				ptr =  (CHAR *)m_pReadBuf + nContentTitle;
-				int n = 0;
-				int j =0;
-				while(n < 0x40 )
-				{
-					BYTE bChar = (BYTE)ptr[n++];
-					if(bChar != 0)
+				if( m_hFile != INVALID_HANDLE_VALUE )
+				{        
+					DWORD NChars;
+					if( !ReadFile( m_hFile, m_pReadBuf, BUFSIZE, &NChars, NULL ))
 					{
-						m_GameList[m_nCurSel].strGameTitle[j++] = (CHAR)bChar;
+						CloseHandle(m_hFile);
+						return;
 					}
-				}
-				m_GameList[m_nCurSel].strGameTitle[j] = '\0';
-				//================================== 提取标题 end ==================================================
+					CloseHandle(m_hFile) ;
+
+					ofstream out2;
+					m_pReadBuf[ NChars ] = '\0';
+					m_pReadBuf[ NChars + 1] = '\0';
+
+					BYTE startCodeJpeg[] = {0xFF,0xD8};
+					BYTE endCodeJpeg[] = {0xFF,0xD9};
+
+					BYTE startCodePng[] = {0x89,0x50};
+					BYTE endCodePng[] = {0xAE,0x42,0x60,0x82};
+
+					char *ptr = (CHAR *)m_pReadBuf;
+					char *ptrEnd = ptr + BUFSIZE + 2;
+					char *start_ptr,*end_ptr;
+					size_t length;
+
+					//================================== 提取ID begin ==================================================
+					ptr =  (CHAR *)m_pReadBuf + nTitleID;
+					swprintf(m_GameList[m_nCurSel].strTitleID, L"%-8X", ReadUInt32(ptr));
+					//================================== 提取ID end ==================================================
 
 
-				//================================== 提取小图 begin ==================================================
-				if(m_GameList[m_nCurSel].strIcoPath[0] == 0)
-				{
-					ptr =  (CHAR *)m_pReadBuf + nContentImageSize;
-					start_ptr = ptr;
-					length = ReadUInt32(start_ptr);
-
-					sprintf_s( strIcoPath,"%s:\\hidden\\%s\\default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName );
-					out2.open(strIcoPath, ios::out | ios::binary);
-					out2.write(start_ptr + 4,length);
-					out2.close();
-				}
-				//================================== 提取小图 end ==================================================
-
-
-				//================================== 提取大图 begin ==================================================
-				if(m_GameList[m_nCurSel].strWallPath[0] == 0)
-				{
-					bool isJpeg = true;
-					length = 0;
-
-					ptr =  (CHAR *)m_pReadBuf + nStart;
-					start_ptr = ptr;
-
-					// 判断格式(png、jpeg)
-					if((BYTE)ptr[0] == startCodeJpeg[0] && (BYTE)ptr[1] == startCodeJpeg[1])
+					//================================== 提取标题 begin ==================================================
+					ptr =  (CHAR *)m_pReadBuf + nContentTitle;
+					int n = 0;
+					int j =0;
+					while(n < 0x40 )
 					{
-						ptr += 2;
-						while(ptr < ptrEnd)
+						BYTE bChar = (BYTE)ptr[n++];
+						if(bChar != 0)
 						{
-							if((BYTE)ptr[0] == endCodeJpeg[0] && (BYTE)ptr[1] == endCodeJpeg[1] && (BYTE)ptr[2] == 0 && (BYTE)ptr[3] == 0)
-							{
-								length = ptr - start_ptr + 2;
-								break;
-							}
+							m_GameList[m_nCurSel].strGameTitle[j++] = (CHAR)bChar;
+						}
+					}
+					m_GameList[m_nCurSel].strGameTitle[j] = '\0';
+					//================================== 提取标题 end ==================================================
+
+
+					//================================== 提取小图 begin ==================================================
+					if(m_GameList[m_nCurSel].strIcoPath[0] == 0)
+					{
+						ptr =  (CHAR *)m_pReadBuf + nContentImageSize;
+						start_ptr = ptr;
+						length = ReadUInt32(start_ptr);
+
+						sprintf_s( strIcoPath,"%s\\hidden\\%s\\default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName );
+						out2.open(strIcoPath, ios::out | ios::binary);
+						out2.write(start_ptr + 4,length);
+						out2.close();
+					}
+					//================================== 提取小图 end ==================================================
+
+
+					//================================== 提取大图 begin ==================================================
+					if(m_GameList[m_nCurSel].strWallPath[0] == 0)
+					{
+						bool isJpeg = true;
+						length = 0;
+
+						ptr =  (CHAR *)m_pReadBuf + nStart;
+						start_ptr = ptr;
+
+						// 判断格式(png、jpeg)
+						if((BYTE)ptr[0] == startCodeJpeg[0] && (BYTE)ptr[1] == startCodeJpeg[1])
+						{
 							ptr += 2;
-						}
-					}
-					else if((BYTE)ptr[0] == startCodePng[0] && (BYTE)ptr[1] == startCodePng[1])
-					{
-						ptr += 5;
-						while(ptr < ptrEnd)
-						{
-							if((BYTE)ptr[0] == endCodePng[0] && (BYTE)ptr[1] == endCodePng[1] && (BYTE)ptr[2] == endCodePng[2] && (BYTE)ptr[3] == endCodePng[3])
+							while(ptr < ptrEnd)
 							{
-								length = ptr - start_ptr + 4;
-								break;
+								if((BYTE)ptr[0] == endCodeJpeg[0] && (BYTE)ptr[1] == endCodeJpeg[1] && (BYTE)ptr[2] == 0 && (BYTE)ptr[3] == 0)
+								{
+									length = ptr - start_ptr + 2;
+									break;
+								}
+								ptr += 2;
 							}
-							ptr += 4;
 						}
-					}
-
-					if(length != 0)
-					{
-						sprintf_s(strWallPath,"%s:\\hidden\\%s\\default_wall.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName );
-						out2.open(strWallPath, ios::out | ios::binary);
-
-						int num;
-						if(length > BlockLevel[0])
+						else if((BYTE)ptr[0] == startCodePng[0] && (BYTE)ptr[1] == startCodePng[1])
 						{
-							num = BlockLevel[0];
-							out2.write(start_ptr,num);
-							num += 2 * 0x1000;
-							start_ptr += num;
-							if(length > BlockLevel[1])
+							ptr += 5;
+							while(ptr < ptrEnd)
 							{
-								length -= num;
-								num = BlockLevel[1] - BlockLevel[0] - 2 * 0x1000;
-								out2.write(start_ptr,num);
+								if((BYTE)ptr[0] == endCodePng[0] && (BYTE)ptr[1] == endCodePng[1] && (BYTE)ptr[2] == endCodePng[2] && (BYTE)ptr[3] == endCodePng[3])
+								{
+									length = ptr - start_ptr + 4;
+									break;
+								}
+								ptr += 4;
+							}
+						}
 
-								num += 0x1000;
+						if(length != 0)
+						{
+							sprintf_s(strWallPath,"%s\\hidden\\%s\\default_wall.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName );
+							out2.open(strWallPath, ios::out | ios::binary);
+
+							int num;
+							if(length > BlockLevel[0])
+							{
+								num = BlockLevel[0];
+								out2.write(start_ptr,num);
+								num += 2 * 0x1000;
 								start_ptr += num;
-								out2.write(start_ptr,length - num);
+								if(length > BlockLevel[1])
+								{
+									length -= num;
+									num = BlockLevel[1] - BlockLevel[0] - 2 * 0x1000;
+									out2.write(start_ptr,num);
+
+									num += 0x1000;
+									start_ptr += num;
+									out2.write(start_ptr,length - num);
+								}
+								else
+								{
+									out2.write(start_ptr,length - num);
+								}
 							}
 							else
 							{
-								out2.write(start_ptr,length - num);
+								out2.write(start_ptr,length);
 							}
+							out2.close();
 						}
-						else
-						{
-							out2.write(start_ptr,length);
-						}
-						out2.close();
 					}
+					//================================== 提取大图 end ==================================================
 				}
-				//================================== 提取大图 end ==================================================
+
+				sprintf(strIcoPath, "file://%s:/hidden/%s/default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
+				mbstowcs(m_GameList[m_nCurSel].strIcoPath,strIcoPath,strlen(strIcoPath));
+
+				sprintf(strWallPath, "file://%s:/hidden/%s/default_wall.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
+				mbstowcs(m_GameList[m_nCurSel].strWallPath,strWallPath,strlen(strWallPath));
 			}
 
-			sprintf(strIcoPath, "file://%s:/hidden/%s/default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
-			mbstowcs(m_GameList[m_nCurSel].strIcoPath,strIcoPath,strlen(strIcoPath));
+			// 设置背景图
+			if(m_ConfigNode.nShowWall && !m_ConfigNode.nShowNewWall)
+			{
+				m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
+			}
 
-			sprintf(strWallPath, "file://%s:/hidden/%s/default_wall.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
-			mbstowcs(m_GameList[m_nCurSel].strWallPath,strWallPath,strlen(strWallPath));
+			// 设置封面图
+			m_GameImage.SetImagePath(m_GameList[m_nCurSel].strTitleImagePath);
+
+			// 设置小图
+			m_GameIcoImage.SetImagePath(m_GameList[m_nCurSel].strIcoPath);
+		}
+		else
+		{
+			char mntpth[] = "dice";
+			UINT32 ret;
+
+			//char strDevice[MAX_PATH];
+			//memset(strDevice, 0, MAX_PATH);
+			//sprintf(strDevice, "%s", m_curDevice.deviceName);
+
+			//LaunchXBLA("Content\\0000000000000000\\5841085C\\000D0000\\5841085C01234567");
+
+			unmountCon(mntpth);
+			ret = mountCon(mntpth, m_curDevice.deviceName, m_GameList[m_nCurSel].strPath);
+
+			if(ret == 0)
+			{
+				listFiles("dice:\\*");
+				// 设置小图
+				m_GameIcoImage.SetImagePath(L"dice:\\icon.png");
+			}
 		}
 
 		m_labelValueTitleId.SetText(m_GameList[m_nCurSel].strTitleID);
 		m_labelValueTitleName.SetText(m_GameList[m_nCurSel].strGameTitle);
-
-		// 设置背景图
-		if(m_ConfigNode.nShowWall && !m_ConfigNode.nShowNewWall)
-		{
-			//m_WallImage.SetImagePath(L"");
-			m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
-			//m_nCurImage = m_nCurSel;
-		}
-
-		// 设置封面图
-		m_GameImage.SetImagePath(m_GameList[m_nCurSel].strTitleImagePath);
-
-		// 设置小图
-		m_GameIcoImage.SetImagePath(m_GameList[m_nCurSel].strIcoPath);
 	}
 
 	//----------------------------------------------------------------------------------
 	// 刷新设备列表
 	//----------------------------------------------------------------------------------
-	VOID RefashDevice()
+	VOID RefashDeviceList()
 	{
 		int nIndex = 0;
 		m_listDevice.DeleteItems(0,m_listDevice.GetItemCount());
+		RefashDevice();
 		int nCount = sizeof(m_DeviceMappings)/sizeof(m_DeviceMappings[0]);
 		for (int i = 0; i < nCount; i++)
 		{
-			switch(m_DeviceMappings[i].deviceIndex)
-			{
-				case IDS_DRIVE_USB0:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_USB0();
-					break;
-				case IDS_DRIVE_USB1:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_USB1();
-					break;
-				case IDS_DRIVE_USB2:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_USB2();
-					break;
-				case IDS_DRIVE_DVD:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_DVD();
-					break;
-				case IDS_DRIVE_FLASH:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_FLASH();
-					break;
-				case IDS_DRIVE_HDD:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_HDD();
-					break;
-				case IDS_DRIVE_DEVKIT:
-					m_DeviceMappings[i].isSuccess = DeviceMgrLib::IsMounted_HDD();
-					break;
-			}
 			if(m_DeviceMappings[i].isSuccess)
 			{
 				m_listDevice.InsertItems(nIndex,1);
@@ -825,6 +1077,7 @@ class CMyMainScene : public CXuiSceneImpl
 		// Retrieve controls for later use.
 		GetChildById( L"labelValue", &m_Value );
 		GetChildById( L"listDevice", &m_listDevice );
+		GetChildById( L"listGameType", &m_listGameType );
 		GetChildById( L"listMenu", &m_listMenu );
 		GetChildById( L"listGames", &m_List );
 		GetChildById( L"listLanguage", &m_listLanguage );
@@ -911,6 +1164,7 @@ class CMyMainScene : public CXuiSceneImpl
 		m_panelMenu.SetOpacity(0);
 		m_listMenu.SetOpacity(0);
 		m_listDevice.SetOpacity(0);
+		m_listGameType.SetOpacity(0);
 		m_listLanguage.SetOpacity(0);
 		m_List.SetOpacity(1);
 		m_List.SetFocus(XUSER_INDEX_ANY);
@@ -945,11 +1199,25 @@ class CMyMainScene : public CXuiSceneImpl
 		if( hObjPressed == m_List )
 		{
 			bHandled = TRUE;
-			DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
+
+			if(m_ConfigNode.nGameType == 0)
+			{
+				XLaunchNewImage( m_GameList[m_nCurSel].strPath, 0 );
+			}
+			else
+			{
+				XLaunchNewImage("dice:\\default.xex",0);
+			}
+			//DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
 		}
 		else if( hObjPressed == m_listDevice )
 		{
 			MountDevice((LPWSTR)(m_listDevice.GetText(m_listDevice.GetCurSel())));
+		}
+		else if( hObjPressed == m_listGameType )
+		{
+			m_ConfigNode.nGameType = m_listGameType.GetCurSel();
+			MountDevice(m_ConfigNode.strDevice);
 		}
 		else if( hObjPressed == m_listMenu )
 		{
@@ -957,16 +1225,21 @@ class CMyMainScene : public CXuiSceneImpl
 			{
 				case 0:				// 显示设备列表
 					m_listMenu.SetOpacity(0);
-					RefashDevice();
+					RefashDeviceList();
 					m_listDevice.SetOpacity(1);
 					m_listDevice.SetFocus(XUSER_INDEX_ANY);
 					break;
-				case 1:
+				case 1:				// 显示游戏类型选择
+					m_listMenu.SetOpacity(0);
+					m_listGameType.SetOpacity(1);
+					m_listGameType.SetFocus(XUSER_INDEX_ANY);
+					break;
+				case 2:
 					m_listMenu.SetOpacity(0);
 					m_listLanguage.SetOpacity(1);
 					m_listLanguage.SetFocus(XUSER_INDEX_ANY);
 					break;
-				case 2:
+				case 3:
 					if(m_ConfigNode.nShowWall)
 					{
 						m_ConfigNode.nShowWall = 0;
@@ -983,7 +1256,7 @@ class CMyMainScene : public CXuiSceneImpl
 						m_listMenu.SetText(2,StrAdd(m_strShowWall,L"[OFF]"));
 					}
 					break;
-				case 3:
+				case 4:
 					if(m_ConfigNode.nShowNewWall)
 					{
 						m_ConfigNode.nShowNewWall = 0;
@@ -1005,11 +1278,11 @@ class CMyMainScene : public CXuiSceneImpl
 					}
 					m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
 					break;
-				case 4:				// 返回XDK界面
+				case 5:				// 返回XDK界面
 					SaveConfig();
 					XLaunchNewImage( XLAUNCH_KEYWORD_DEFAULT_APP, 0 );
 					break;
-				case 5:				// 返回DASH界面
+				case 6:				// 返回DASH界面
 					SaveConfig();
 					XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
 					break;
@@ -1022,7 +1295,7 @@ class CMyMainScene : public CXuiSceneImpl
 			{
 				case 0:	
 					dwLanguage = XGetLanguage();
-					if(dwLanguage != 2 || dwLanguage != 7 || dwLanguage != 8 || dwLanguage != 10)
+					if(dwLanguage != 2 || dwLanguage != 8 || dwLanguage != 10)
 					{
 						dwLanguage = 0;
 					}
@@ -1034,12 +1307,9 @@ class CMyMainScene : public CXuiSceneImpl
 					dwLanguage = 2;
 					break;
 				case 3:
-					dwLanguage = 7;
-					break;
-				case 4:	
 					dwLanguage = 8;
 					break;
-				case 5:
+				case 4:
 					dwLanguage = 10;
 					break;
 			}
@@ -1052,6 +1322,23 @@ class CMyMainScene : public CXuiSceneImpl
 			m_ConfigNode.nLanguage = dwLanguage;
 			XuiSetLocale( LocaleLanguage[dwLanguage] );
 			XuiApplyLocale( m_hObj, NULL );
+			switch(dwLanguage)
+			{
+			case 2:
+				m_ConfigNode.nOemCode = IDS_JP;
+				break;
+			case 7:
+				m_ConfigNode.nOemCode = IDS_KOREAN;
+				break;
+			case 8:
+				m_ConfigNode.nOemCode = IDS_CHT;
+				break;
+			default:
+				m_ConfigNode.nOemCode = IDS_CHS;
+				break;
+			}
+			CP_Init(m_ConfigNode.nOemCode);
+			MountDevice(m_ConfigNode.strDevice);
 		}
 		return S_OK;
 	}
@@ -1060,12 +1347,14 @@ class CMyMainScene : public CXuiSceneImpl
 	{
 		CXuiControl menuItemCtrl;
 		CXuiControl deviceItemCtrl;
+		CXuiControl m_listGameTypeCtrl;
 		CXuiControl gameItemCtrl;
 		CXuiControl languageItemCtrl;
 
 
 		m_listMenu.GetCurSel(&menuItemCtrl);
 		m_listDevice.GetCurSel(&deviceItemCtrl);
+		m_listGameType.GetCurSel(&m_listGameTypeCtrl);
 		m_List.GetCurSel(&gameItemCtrl);
 		m_listLanguage.GetCurSel(&languageItemCtrl);
 
@@ -1085,6 +1374,23 @@ class CMyMainScene : public CXuiSceneImpl
 					m_labelY.SetOpacity(0);
 
 					m_listDevice.SetOpacity(0);
+					m_listMenu.SetOpacity(1);
+					m_listMenu.SetFocus(XUSER_INDEX_ANY);
+				}
+			}
+			else if( m_listGameTypeCtrl == deviceItemCtrl.GetFocus(XUSER_INDEX_ANY))
+			{
+				// 返回主菜单
+				if ( pInputData->dwKeyCode == VK_PAD_B)
+				{
+
+					m_ImageB.SetOpacity(1);
+					m_labelB.SetOpacity(1);
+
+					m_ImageY.SetOpacity(0);
+					m_labelY.SetOpacity(0);
+
+					m_listGameType.SetOpacity(0);
 					m_listMenu.SetOpacity(1);
 					m_listMenu.SetFocus(XUSER_INDEX_ANY);
 				}
@@ -1163,6 +1469,14 @@ class CMyMainScene : public CXuiSceneImpl
 					m_panelMenu.SetOpacity(1);
 					m_labelValueInfo.SetOpacity(1);
 					m_listMenu.SetFocus(XUSER_INDEX_ANY);
+					break;
+				case VK_PAD_X:										// 排序
+					m_bSortLess = !m_bSortLess;
+					MountDevice(m_ConfigNode.strDevice);
+					break;
+				case VK_PAD_BACK:									// 返回DASH界面
+					SaveConfig();
+					XLaunchNewImage( XLAUNCH_KEYWORD_DASH, 0 );
 					break;
 				}
 
@@ -1268,7 +1582,59 @@ HRESULT CMyApp::UnregisterXuiClasses()
 //--------------------------------------------------------------------------------------
 VOID __cdecl main()
 {
-	// Declare an instance of the XUI framework application.
+	// 挂载全部的设备
+	//DeviceMgrLib::MapExternalDrives();
+
+	XNetStartupParams xnsp;
+	memset(&xnsp, 0, sizeof(xnsp));
+	xnsp.cfgSizeOfStruct = sizeof(XNetStartupParams);
+	xnsp.cfgFlags = XNET_STARTUP_BYPASS_SECURITY;
+
+	INT iResult = XNetStartup( &xnsp );
+
+	if( iResult != NO_ERROR )
+	   printf("XNETSTARTUP ERROR\n");
+
+	// Start up Winsock
+	WORD wVersion = MAKEWORD( 2, 2 );   // request version 2.2 of Winsock
+	WSADATA wsaData;
+
+	INT err = WSAStartup( wVersion, &wsaData );
+	if( err != 0 )
+	{
+		ATG::FatalError( "WSAStartup failed, error %d.\n", err );
+	}
+
+	// Verify that we got the right version of Winsock
+	if( wsaData.wVersion != wVersion )
+	{
+		ATG::FatalError( "Failed to get proper version of Winsock, got %d.%d.\n",LOBYTE( wsaData.wVersion ), HIBYTE( wsaData.wVersion ) );
+	}
+
+	DWORD   hddexist = (Mount( "Hdd","\\Device\\Harddisk0\\Partition1") == S_OK);
+	hddexist = (Mount( "Devkit","\\Device\\Harddisk0\\Partition1\\Devkit") == S_OK);
+	hddexist = (Mount( "Usb0","\\Device\\Mass0") == S_OK);
+	hddexist = (Mount( "Usb1","\\Device\\Mass1") == S_OK);
+	hddexist = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
+	hddexist = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
+
+	//if(!hddexist)
+	//	return;
+
+	CFtpServer FtpServer;
+	// 数据socket端口[1025,9000]
+	FtpServer.SetDataPortRange( 1029, 9000 ); 
+	CFtpServer::UserNode *FtpUser = FtpServer.AddUser( "xbox", "xbox", "/");
+
+	if( FtpUser ) 
+	{
+		FtpServer.SetUserPriv( FtpUser, CFtpServer::READFILE | CFtpServer::LIST| CFtpServer::WRITEFILE| CFtpServer::DELETEFILE| CFtpServer::CREATEDIR| CFtpServer::DELETEDIR );
+		if( FtpServer.StartListening( INADDR_ANY, 21 ) )
+		{
+			FtpServer.StartAccepting();
+		} 
+	} 
+
 	CMyApp app;
 
 	HRESULT hr = app.Init( XuiD3DXTextureLoader );
@@ -1280,6 +1646,9 @@ VOID __cdecl main()
 	m_ConfigNode.strDevice = L"Devkit";
 	m_ConfigNode.strWallPath = L"";
 	m_ConfigNode.nShowNewWall = 0;
+	m_ConfigNode.nGameType = 1;
+
+
 	// add:读取配置文件 date:2009-12-30 by:chengang
 	LoadConfig();
 
@@ -1375,20 +1744,8 @@ VOID __cdecl main()
 	m_nPageSize = 13;
 	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
 
-
-	// 方法2：设置当前XUI本地化
-	//HXUISTRINGTABLE hxuiStringtable;
-	//LPWSTR pwstrPath;
-
-	//pwstrPath = BuildPath( L"file://game:/media/", apwstrLocale[dwLanguage], L"/XuiLocale.xus" );
-	//XuiLoadStringTableFromFile( pwstrPath, &hxuiStringtable );
-	//XuiApplyLocale( hScene, hxuiStringtable );
-	//XuiFreeStringTable( hxuiStringtable );
-
-	//// 读取图片线程
-	//const DWORD STACK_SIZE = 0;
-	//g_hSetImageThread = CreateThread( NULL, STACK_SIZE, SetImageThreadProc, NULL, 0, NULL );
-
 	app.Run();
+
+	FtpServer.StopListening();
 	app.Uninit();
 }

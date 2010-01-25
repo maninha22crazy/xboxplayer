@@ -1,21 +1,59 @@
-#include "Utility.h"
+#ifndef Externs_H
+#define Externs_H
 
-extern GameList m_GameList;
-extern INT m_nCurSel;				//	当前选中项
-extern INT m_nCurPage;				//	当前选中页
-extern INT m_nPageSize;			//	页的可显示项
-extern INT m_nCountPage;			//	总页数
+#include <vector>
+
+/************************************************************************/
+/*							     usb设备ID定义                          */
+/************************************************************************/
+#define IDS_DRIVE_DEVKIT                       0
+#define IDS_DRIVE_USB0							1
+#define IDS_DRIVE_USB1							2
+#define IDS_DRIVE_USB2							3
+#define IDS_DRIVE_DVD							4
+#define IDS_DRIVE_FLASH						5
+#define IDS_DRIVE_HDD							6
+
+struct device_table 
+{
+    char		*deviceName;
+	const wchar_t		*deviceNameW;
+    UINT			deviceIndex;
+    bool		isSuccess;
+	bool		isUtf8;
+};
+
+struct GameNode
+{
+    WCHAR   strName[MAX_PATH];
+    CHAR	strPath[MAX_PATH];
+	WCHAR   strTitleImagePath[MAX_PATH];
+	FILETIME ftCreationTime;
+
+	
+	CHAR	strFileName[MAX_PATH];
+	WCHAR   strWallPath[MAX_PATH];
+	WCHAR	strIcoPath[MAX_PATH];
+	WCHAR	strTitleID[0x40];
+	WCHAR	strGameTitle[MAX_PATH];
+	BOOL	bIsRegion;
+};
 
 
-//extern CHAR* m_curRoot;			//	查找设备的根目录
-//extern BOOL m_IsUtf8;				//	当前设备是否utf8命名文件名
+struct ConfigNode
+{
+	int   nOemCode;				// 编码：0-使用系统;932-ShiftJIS(日);936(GBK简体);949(韩);950(Big5繁体)
+	int   nLanguage;			// 本地化语言：0-使用系统;1-英语;2-日语;7-韩语;8-中文(繁);10-中文(简体);其他值-英语
+	WCHAR* strDevice;			// 最后选中的驱动器
+	int   nShowWall;			// 是否显示背景图：默认打开-1;0-关闭
+	int   nShowNewWall;			// 是否显示自定义背景图：默认否-0;1-是
+	WCHAR* strWallPath;			// 要显示的背景图
+	int   nGameType;			// 最后选中的游戏类别：0-游戏;1-xbla
+};
 
-extern BOOL m_bSortLess;			//	升降序
+typedef std::vector <GameNode> GameList;
+extern struct device_table m_DeviceMappings[7];
+extern ConfigNode m_ConfigNode;						//  配置信息
+extern LPCWSTR LocaleLanguage[11];						// 多语言支持
 
-extern ConfigNode m_ConfigNode;	//  配置信息
-
-extern CHAR* m_strConfigPath;				// 配置文件位置
-extern WCHAR* m_strBackGroundPath;			// 背景图文件位置
-extern WCHAR* m_strGameList;					//	游戏列表标题
-
-extern LPCWSTR LocaleLanguage[11];			// 多语言支持
+#endif

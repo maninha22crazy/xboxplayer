@@ -13,7 +13,7 @@
 
 #include <vector>
 #include "AtgXmlParser.h"
-#include "Utility.h"
+#include "Externs.h"
 
 struct XMLElementAttribute
 {

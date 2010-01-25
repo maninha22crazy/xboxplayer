@@ -8,6 +8,56 @@
 #ifndef GameList_H
 #define GameList_H
 
+#include "Glbs.h"
+
+#define BUFSIZE			5000000	
+#define IDS_JP			932				// 日语Shift-JIS
+#define IDS_CHS		936				// 中文简体
+#define IDS_KOREAN		949				// 韩语
+#define IDS_CHT		950				// 中文繁体Big5
+
+GameList m_GameList;
+INT m_nCurSel		= 0;				//	当前选中项
+INT m_nCurPage		= 1;				//	当前选中页
+INT m_nPageSize		= 0;				//	页的可显示项
+INT m_nCountPage	= 1;				//	总页数
+BOOL m_bSortLess	= false;			//	升降序
+
+CHAR* m_strConfigPath	= "game:\\GameList.xml";	// 配置文件位置
+WCHAR* m_strAppWallPath	= L"file://game:/media/background.jpg";	// 背景图文件位置
+
+WCHAR m_strGameList[256];					//	游戏列表标题
+WCHAR m_strShowWall[256];					//	背景打开关闭菜单标题
+WCHAR m_strShowNewWall[256];				//	设置背景打开关闭菜单标题
+
+// 多语言支持
+LPCWSTR LocaleLanguage[11] =
+{
+	L"en-en",	// the default locale
+	L"en-en",	// English
+	L"ja-jp",	// Japanese
+	L"de-de",	// German
+	L"fr-fr",	// French
+	L"es-es",	// Spanish
+	L"it-it",	// Italian
+	L"ko-kr",	// Korean
+	L"zh-cht",	// Traditional Chinese
+	L"pt-pt",	// Portuguese
+	L"zh-chs"	// Simplified Chinese
+};
+
+
+static const UINT BlockLevel[] = { 0xA8000, 0x154000 };
+static const UINT nContentImageSize = 0x1716;			// 小图大小位置
+static const UINT nContentImage = 0x571A;				// 小图位置
+
+static const UINT nContentTitle = 0x1692;				// 标题位置
+static	const UINT nContentTitleSize = 0x40;			// 标题宽度
+
+static const UINT nTitleID = 0x360;					// TitleID位置
+
+static const UINT nStart = 0xe000;						// 读取位置
+
 WCHAR m_lpImgPathBuf[MAX_PATH];
 
 /**--------------------------------------------------------------------------------------
@@ -21,8 +71,11 @@ WCHAR m_lpImgPathBuf[MAX_PATH];
  * Author：GooHome
  * History：2009/12/12 初版做成
  --------------------------------------------------------------------------------------*/
-VOID LoadGameList(GameList *m_GameList);
+VOID LoadGameList();
 
+VOID LoadXblaList();
+
+VOID LoadList();
 
 /**--------------------------------------------------------------------------------------
  * getGameTitle - 游戏文件说明
@@ -72,4 +125,5 @@ VOID LoadConfig(VOID);
 //	Date	:	2010-01-13
 //========================================================================*/
 VOID SaveConfig(VOID);
+
 #endif

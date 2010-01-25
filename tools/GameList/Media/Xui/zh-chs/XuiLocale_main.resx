@@ -11,11 +11,15 @@
         ：增加软件自定义背景功能
         ：软件启动默认选择驱动器</value></data>
 <data name="MainScene.listMenu.ItemsText"><value>设备切换
+游戏类型
 语言选择
 开启背景图
 设置背景图
 返回XDK
 返回DASH
+</value></data>
+<data name="MainScene.listGameType.ItemsText"><value>普通游戏
+XBLA
 </value></data>
 </root>
 

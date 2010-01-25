@@ -71,8 +71,8 @@
 			/>
 			<Tool
 				Name="VCX360LinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="d3d9d.lib d3dx9d.lib xgraphicsd.lib xapilibd.lib xaudiod.lib x3daudiod.lib xboxkrnl.lib xbdm.lib xactd.lib xuirund.lib  xuirenderd.lib xmediad.lib"
+				AdditionalOptions="/privilege:6"
+				AdditionalDependencies="d3d9d.lib d3dx9d.lib xgraphicsd.lib xapilibd.lib xboxkrnl.lib xbdm.lib xactd.lib xuirund.lib xuirenderd.lib xmediad.lib xnetd.lib"
 				OutputFile="$(OutDir)/$(ProjectName).exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -84,6 +84,8 @@
 			/>
 			<Tool
 				Name="VCX360ImageTool"
+				AdditionalOptions="/privilege:6"
+				OutputFileName="$(OutDir)\XexDash.xex"
 				ProjectDefaults=""
 				AdditionalSections=""
 			/>
@@ -762,6 +764,14 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\CFtpServer.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CFtpServer.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

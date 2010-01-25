@@ -10,11 +10,15 @@ XexDashの特徴：
         ：背景、アイコン表示機能を提供します。
         ：デフォルトデバイス変更機能を提供します</value></data>
 <data name="MainScene.listMenu.ItemsText"><value>デバイス変更
+游戏类型
 言語変更
 背景変更
 背景設定
 XDKへ
 DASHへ
+</value></data>
+<data name="MainScene.listGameType.ItemsText"><value>普通游戏
+XBLA
 </value></data>
 </root>
 

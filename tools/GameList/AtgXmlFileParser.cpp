@@ -244,6 +244,10 @@ namespace ATG
 		{
 			m_ConfigNode.strWallPath = strValue;
 		}
+		else if(_wcsicmp(strName,L"gametype") == 0)
+		{
+			m_ConfigNode.nGameType = _wtoi(strValue);
+		}
 	}
 
 

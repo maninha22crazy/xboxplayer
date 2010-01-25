@@ -11,11 +11,15 @@
         ：增加軟件自定義背景圖
         ：軟件啟動默認選擇最後的驅動器</value></data>
 <data name="MainScene.listMenu.ItemsText"><value>設備切換
+遊戲類型
 語言選擇
 開啟背景圖
 設置背景圖
 返回XDK
 返回DASH
+</value></data>
+<data name="MainScene.listGameType.ItemsText"><value>普通遊戲
+XBLA
 </value></data>
 </root>
 
