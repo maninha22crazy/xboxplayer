@@ -43,6 +43,28 @@
 #include "AtgXmlFileParser.h"
 #include "Externs.h"
 
+
+UINT			m_nType;			// 节点类型
+ArcadeInfo*		pArcadeInfo;		
+bool localFind = true;
+
+// 多语言支持
+LPCWSTR LocaleLanguage2[11] =
+{
+	L"es-es",	// the default locale
+	L"es-es",	// English
+	L"ja-jp",	// Japanese
+	L"de-de",	// German
+	L"fr-fr",	// French
+	L"es-es",	// Spanish
+	L"it-it",	// Italian
+	L"ko-kr",	// Korean
+	L"zh-tw",	// Traditional Chinese
+	L"pt-br",	// Portuguese
+	L"zh-tw"	// Simplified Chinese
+};
+
+
 namespace ATG
 {
 
@@ -72,7 +94,9 @@ namespace ATG
 
 		g_strParseError[0] = '\0';
 		
-		if(nType == 1)
+		localFind = true;
+		m_nType = nType;
+		if(m_nType == 1)
 		{
 			pArcadeInfo = (ArcadeInfo*)pNode;
 		}
@@ -134,11 +158,6 @@ namespace ATG
 		// Copy the begin tag name to the current element desc.
 		wcsncpy_s( m_CurrentElementDesc.strElementName, strName, NameLen );
 
-
-		// Clear out the accumulated element body.
-		m_CurrentElementDesc.strElementBody[0] = L'\0';
-		// Copy all attributes from the begin tag into the current element desc.
-
 		if(m_nType == 1)
 		{
 			CopyAttributesArc( pAttributes, NumAttributes );
@@ -147,6 +166,14 @@ namespace ATG
 		{
 			CopyAttributesAppConfig( pAttributes, NumAttributes );
 		}
+
+
+		// Clear out the accumulated element body.
+		m_CurrentElementDesc.strElementBody[0] = L'\0';
+		// Copy all attributes from the begin tag into the current element desc.
+
+
+
 		return S_OK;
 	}
 
@@ -155,6 +182,14 @@ namespace ATG
 		// Accumulate this element content into the current desc body content.
 		wcsncat_s( m_CurrentElementDesc.strElementBody, strData, DataLen );
 
+
+		if(m_nType == 1 && localFind && _wcsicmp(m_CurrentElementDesc.strElementName,L"Description") == 0)
+		{
+			memset(pArcadeInfo->strDescription,0,1024); 
+			
+			wcsncpy_s( pArcadeInfo->strDescription,m_CurrentElementDesc.strElementBody,wcslen(m_CurrentElementDesc.strElementBody) );
+			localFind = false;
+		}
 		return S_OK;
 	}
 
@@ -182,7 +217,39 @@ namespace ATG
 
 	VOID XmlFileParser::CopyAttributesArc( const XMLAttribute* pAttributes, UINT uAttributeCount )
 	{
+		m_CurrentElementDesc.Attributes.clear();
 
+		
+		if(_wcsicmp(m_CurrentElementDesc.strElementName,L"TitleInfo") == 0)
+		{
+			for(UINT i = 0; i < uAttributeCount; i++ )
+			{
+				WCHAR strNameT[MAX_PATH];
+				memset(strNameT,0,MAX_PATH); 
+				wcsncpy_s( strNameT,pAttributes[i].strName,pAttributes[i].NameLen);
+
+				if(_wcsicmp(strNameT,L"ImagePath") == 0)
+				{
+					memset(strNameT,0,MAX_PATH); 
+					wcsncpy_s( strNameT,pAttributes[i].strValue,pAttributes[i].ValueLen);
+					swprintf( pArcadeInfo->strImagePath, L"file://dice:/%s", strNameT);
+				}
+				else if(_wcsicmp(strNameT,L"locale") == 0)
+				{
+					memset(strNameT,0,MAX_PATH); 
+					wcsncpy_s( strNameT,pAttributes[i].strValue,pAttributes[i].ValueLen);
+					if(_wcsicmp(strNameT,LocaleLanguage2[m_ConfigNode.nLanguage]) == 0)
+					{
+						localFind = true;
+					}
+				}
+				else if(localFind && _wcsicmp(strNameT,L"Name") == 0)
+				{
+					memset(pArcadeInfo->strName,0,MAX_PATH); 
+					wcsncpy_s( pArcadeInfo->strName,pAttributes[i].strValue,pAttributes[i].ValueLen);
+				}
+			}
+		}
 	}
 
 	VOID XmlFileParser::CopyAttributesAppConfig( const XMLAttribute* pAttributes, UINT uAttributeCount )
@@ -216,7 +283,7 @@ namespace ATG
 		}
 		else if(_wcsicmp(strName,L"device") == 0)
 		{
-			m_ConfigNode.strDevice = strValue;
+			wcsncpy_s( m_ConfigNode.strDevice,strValue,wcslen(strValue));
 		}
 		else if(_wcsicmp(strName,L"oemcode") == 0)
 		{
@@ -232,7 +299,7 @@ namespace ATG
 		}
 		else if(_wcsicmp(strName,L"wallPath") == 0)
 		{
-			m_ConfigNode.strWallPath = strValue;
+			wcsncpy_s( m_ConfigNode.strWallPath,strValue,wcslen(strValue));
 		}
 		else if(_wcsicmp(strName,L"gametype") == 0)
 		{

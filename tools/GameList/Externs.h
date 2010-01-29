@@ -44,20 +44,20 @@ struct GameNode
 // Arc节点信息（从xml中解析）
 struct ArcadeInfo
 {
-	WCHAR* strID;				// ID
-	WCHAR* strName;				// Name
-	WCHAR* strImagePath;		// ImagePath
-	WCHAR* strDescription;		// Description
+	WCHAR strID[MAX_PATH];				// ID
+	WCHAR strName[MAX_PATH];				// Name
+	WCHAR strImagePath[MAX_PATH];		// ImagePath
+	WCHAR strDescription[1024];		// Description
 };
 
 struct ConfigNode
 {
 	int   nOemCode;				// 编码：0-使用系统;932-ShiftJIS(日);936(GBK简体);949(韩);950(Big5繁体)
 	int   nLanguage;			// 本地化语言：0-使用系统;1-英语;2-日语;7-韩语;8-中文(繁);10-中文(简体);其他值-英语
-	WCHAR* strDevice;			// 最后选中的驱动器
+	WCHAR strDevice[MAX_PATH];			// 最后选中的驱动器
 	int   nShowWall;			// 是否显示背景图：默认打开-1;0-关闭
 	int   nShowNewWall;			// 是否显示自定义背景图：默认否-0;1-是
-	WCHAR* strWallPath;			// 要显示的背景图
+	WCHAR strWallPath[MAX_PATH];			// 要显示的背景图
 	int   nGameType;			// 最后选中的游戏类别：0-游戏;1-xbla
 };
 
@@ -66,5 +66,6 @@ extern struct device_table m_DeviceMappings[7];
 extern LPCWSTR LocaleLanguage[11];						// 多语言支持
 extern ConfigNode m_ConfigNode;						// 配置信息
 extern ArcadeInfo m_ArcadeInfo;						// 当前选中的arc信息
+extern XNADDR     m_xnaddr;
 
 #endif

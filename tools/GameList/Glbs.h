@@ -14,3 +14,4 @@ struct device_table m_DeviceMappings[] = {
 struct device_table m_curDevice;
 ConfigNode m_ConfigNode;				//  配置信息
 ArcadeInfo m_ArcadeInfo;				//  当前选中的arc信息
+XNADDR     m_xnaddr;

@@ -257,10 +257,14 @@ VOID SortList(UINT SortType)
 //--------------------------------------------------------------------------------------
 VOID LoadConfig(VOID)
 {
-	ATG::XMLParser parser;
+	//ATG::XMLParser parser;
+	//ATG::XmlFileParser xmlFile;
+	//parser.RegisterSAXCallbackInterface( &xmlFile );
+	//HRESULT hr = parser.ParseXMLFile( m_strConfigPath );
+
+	// 解析xml，读取信息
 	ATG::XmlFileParser xmlFile;
-	parser.RegisterSAXCallbackInterface( &xmlFile );
-	HRESULT hr = parser.ParseXMLFile( m_strConfigPath );
+	HRESULT hr = xmlFile.LoadXMLFile( m_strConfigPath,NULL,0);
 
 	if( SUCCEEDED( hr ) )
 	{
@@ -318,6 +322,13 @@ VOID SaveConfig(VOID)
 	parser.AddAttribute("value",m_ConfigNode.strWallPath);
 	parser.AddAttribute("description","");
 	parser.EndElement();
+
+	parser.StartElement("item");
+	parser.AddAttribute("name","gametype");
+	parser.AddAttribute("value",m_ConfigNode.nGameType);
+	parser.AddAttribute("description","");
+	parser.EndElement();
+
 
 	parser.EndElement();
 	parser.Close();
@@ -629,10 +640,11 @@ VOID LoadGameList()
 						sprintf(strImg, "file://%s/hidden/%s/default_wall.png", m_curDevice.deviceName,wfd.cFileName);
 						mbstowcs(pGlist->strWallPath,strImg,strlen(strImg));
 					}
+					CloseHandle(hFileFind);
 
 					CHAR   strIco[MAX_PATH];
 					memset(strIco, 0, MAX_PATH);
-					sprintf(strIco, "%s/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
+					sprintf(strIco, "%s\\hidden\\%s\\default_ico.png", m_curDevice.deviceName,wfd.cFileName);
 
 					hFileFind = CreateFile( strIco, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
 					if( hFileFind = INVALID_HANDLE_VALUE )
@@ -645,6 +657,7 @@ VOID LoadGameList()
 						sprintf(strIco, "file://%s/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
 						mbstowcs(pGlist->strIcoPath,strIco,strlen(strIco));
 					}
+					CloseHandle(hFileFind);
 
 					memset(pGlist->strPath, 0, MAX_PATH);
 					sprintf(pGlist->strPath, "%s\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
@@ -653,8 +666,8 @@ VOID LoadGameList()
 					//==================================== 查找是否存在游戏背景图 end ================================
 
 					m_GameList.push_back(*pGlist);
-					CloseHandle(hFile);
-				}			
+				}		
+				CloseHandle(hFile);
 			}
 
 		} while( FindNextFile( hFind, &wfd ) );
@@ -746,6 +759,10 @@ class CMyMainScene : public CXuiSceneImpl
 	CXuiTextElement m_labelB;
 	CXuiTextElement m_labelY;
 
+	CXuiTextElement m_labelIP;
+	CXuiTextElement m_labelArcDescription;
+	
+
 
 	#define NONE 0
 	#define INFO 1
@@ -821,10 +838,8 @@ class CMyMainScene : public CXuiSceneImpl
 		SortList(1);		// 排序
 		RefreshPageInfo();
 		
-		WCHAR   strTxt[MAX_PATH];
-		memset(strTxt,0,MAX_PATH); 
-		wcsncat_s(strTxt,m_curDevice.deviceNameW,wcslen(m_curDevice.deviceNameW));
-		m_ConfigNode.strDevice = strTxt;
+		memset(m_ConfigNode.strDevice,0,MAX_PATH); 
+		wcsncat_s(m_ConfigNode.strDevice,m_curDevice.deviceNameW,wcslen(m_curDevice.deviceNameW));
 		
 		return isOk;
 	}
@@ -835,6 +850,9 @@ class CMyMainScene : public CXuiSceneImpl
 	//--------------------------------------------------------------------------------------
 	VOID SetGameWall()
 	{
+		//m_labelArcName.SetText(L"");
+		m_labelArcDescription.SetText(L"");
+
 		if(m_ConfigNode.nGameType == 0)
 		{
 			if(!m_GameList[m_nCurSel].bIsRegion)
@@ -987,16 +1005,20 @@ class CMyMainScene : public CXuiSceneImpl
 					//================================== 提取大图 end ==================================================
 				}
 
-				sprintf(strIcoPath, "file://%s:/hidden/%s/default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
+				sprintf(strIcoPath, "file://%s/hidden/%s/default_ico.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
 				mbstowcs(m_GameList[m_nCurSel].strIcoPath,strIcoPath,strlen(strIcoPath));
 
-				sprintf(strWallPath, "file://%s:/hidden/%s/default_wall.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
+				sprintf(strWallPath, "file://%s/hidden/%s/default_wall.png", m_curDevice.deviceName,m_GameList[m_nCurSel].strFileName);
 				mbstowcs(m_GameList[m_nCurSel].strWallPath,strWallPath,strlen(strWallPath));
 			}
 
 			// 设置背景图
 			if(m_ConfigNode.nShowWall && !m_ConfigNode.nShowNewWall)
 			{
+				WCHAR aa[MAX_PATH];
+				memset(aa,0,MAX_PATH); 
+				wcsncat_s(aa,m_GameList[m_nCurSel].strWallPath,wcslen(m_GameList[m_nCurSel].strWallPath));
+		
 				m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
 			}
 
@@ -1021,12 +1043,20 @@ class CMyMainScene : public CXuiSceneImpl
 				ATG::XmlFileParser xmlFile;
 				ArcadeInfo ArcadeInfoNode;						// 当前选中的arc信息
 				//parser.RegisterSAXCallbackInterface( &xmlFile );
-				HRESULT hr = xmlFile.LoadXMLFile( m_strConfigPath,&ArcadeInfoNode,1);
+				HRESULT hr = xmlFile.LoadXMLFile( "dice:\\ArcadeInfo.xml",&ArcadeInfoNode,1);
 
 				if( SUCCEEDED( hr ) )
 				{
 					// 设置小图
 					m_GameIcoImage.SetImagePath(ArcadeInfoNode.strImagePath);
+
+					//m_labelArcName.SetText(ArcadeInfoNode.strName );
+					m_Value.SetText(ArcadeInfoNode.strName );
+					m_labelArcDescription.SetText(ArcadeInfoNode.strDescription);
+				}
+				else
+				{
+					m_GameIcoImage.SetImagePath(L"");
 				}
 			}
 		}
@@ -1086,6 +1116,11 @@ class CMyMainScene : public CXuiSceneImpl
 		GetChildById( L"labelB", &m_labelB );
 		GetChildById( L"labelY", &m_labelY );
 
+		//GetChildById( L"labelArcName", &m_labelArcName );
+		GetChildById( L"labelIP", &m_labelIP );
+		GetChildById( L"labelArcDescription", &m_labelArcDescription );
+
+
 
 		m_ImageA.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\A.png");
 		m_ImageB.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\B.png");
@@ -1104,10 +1139,10 @@ class CMyMainScene : public CXuiSceneImpl
 			m_AppWallImage.SetImagePath(m_strAppWallPath);
 		}
 
-		LPCWSTR str = m_listMenu.GetText(2);
+		LPCWSTR str = m_listMenu.GetText(3);
 		wcsncpy_s( m_strShowWall, str, wcslen(str) );
 
-		str = m_listMenu.GetText(3);
+		str = m_listMenu.GetText(4);
 		wcsncpy_s( m_strShowNewWall, str, wcslen(str) );
 		
 		if(m_ConfigNode.nShowWall)
@@ -1128,6 +1163,12 @@ class CMyMainScene : public CXuiSceneImpl
 			m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[ON]"));
 		}
 
+		// 显示IP
+		unsigned long ulIp = ntohl( m_xnaddr.ina.S_un.S_addr );
+		WCHAR strIp[256];
+		swprintf(strIp, L"%lu.%lu.%lu.%lu", (ulIp >> 24) & 255, (ulIp >> 16) & 255, (ulIp >> 8) & 255, ulIp & 255);
+		m_labelIP.SetText(strIp);
+
 
 		// add:默认读取配置中的设备 date:2009-12-23 by:EME
 		MountDevice(m_ConfigNode.strDevice);
@@ -1144,6 +1185,9 @@ class CMyMainScene : public CXuiSceneImpl
 
 		m_ImageB.SetOpacity(0);
 		m_labelB.SetOpacity(0);
+
+		//m_labelArcName.SetOpacity(0);
+		//m_labelArcDescription.SetOpacity(0);
 
 		return S_OK;
 	}
@@ -1236,7 +1280,7 @@ class CMyMainScene : public CXuiSceneImpl
 						m_WallImage.SetImagePath(L"");
 						m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[ON]"));
 
-						m_ConfigNode.strWallPath = L"";
+						memset(m_ConfigNode.strWallPath,0,MAX_PATH); 
 						m_AppWallImage.SetImagePath(m_strAppWallPath);
 					}
 					else
@@ -1244,7 +1288,8 @@ class CMyMainScene : public CXuiSceneImpl
 						m_ConfigNode.nShowNewWall = 1;
 						if(m_List.GetCurSel() >= 0)
 						{
-							m_ConfigNode.strWallPath = m_GameList[m_nCurSel].strWallPath;
+							memset(m_ConfigNode.strWallPath,0,MAX_PATH); 
+							wcsncpy_s( m_ConfigNode.strWallPath,m_GameList[m_nCurSel].strWallPath,wcslen(m_GameList[m_nCurSel].strWallPath));
 							m_AppWallImage.SetImagePath(m_ConfigNode.strWallPath);
 						}
 						m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[OFF]"));
@@ -1295,6 +1340,31 @@ class CMyMainScene : public CXuiSceneImpl
 			m_ConfigNode.nLanguage = dwLanguage;
 			XuiSetLocale( LocaleLanguage[dwLanguage] );
 			XuiApplyLocale( m_hObj, NULL );
+
+			LPCWSTR str = m_listMenu.GetText(3);
+			wcsncpy_s( m_strShowWall, str, wcslen(str) );
+
+			str = m_listMenu.GetText(4);
+			wcsncpy_s( m_strShowNewWall, str, wcslen(str) );
+			
+			if(m_ConfigNode.nShowWall)
+			{
+				m_listMenu.SetText(3,StrAdd(m_strShowWall,L"[OFF]"));
+			}
+			else
+			{
+				m_listMenu.SetText(3,StrAdd(m_strShowWall,L"[ON]"));
+			}
+
+			if(m_ConfigNode.nShowNewWall)
+			{
+				m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[OFF]"));
+			}
+			else
+			{
+				m_listMenu.SetText(4,StrAdd(m_strShowNewWall,L"[ON]"));
+			}
+
 			switch(dwLanguage)
 			{
 			case 2:
@@ -1591,6 +1661,11 @@ VOID __cdecl main()
 	hddexist = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
 	hddexist = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
 
+	DWORD dwRet;
+	do
+	{
+		dwRet = XNetGetTitleXnAddr( &m_xnaddr );
+	} while( dwRet == XNET_GET_XNADDR_PENDING );
 
 	CFtpServer FtpServer;
 	// 数据socket端口[1025,9000]
@@ -1614,10 +1689,10 @@ VOID __cdecl main()
 
 	m_ConfigNode.nShowWall = 1;
 	m_ConfigNode.nOemCode = 936; // 默认简体936编码
-	m_ConfigNode.strDevice = L"Devkit";
-	m_ConfigNode.strWallPath = L"";
+	swprintf( m_ConfigNode.strDevice, L"Devkit");
+	memset(m_ConfigNode.strWallPath,0,MAX_PATH); 
 	m_ConfigNode.nShowNewWall = 0;
-	m_ConfigNode.nGameType = 1;
+	m_ConfigNode.nGameType = 0;
 
 
 	// add:读取配置文件 date:2009-12-30 by:chengang
@@ -1682,6 +1757,7 @@ VOID __cdecl main()
 		break;
 	}
 
+	m_ConfigNode.nLanguage = dwLanguage;
 	// 方法1：设置当前XUI本地化
 	XuiSetLocale( LocaleLanguage[dwLanguage] );
 

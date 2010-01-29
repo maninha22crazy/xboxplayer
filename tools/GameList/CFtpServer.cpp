@@ -339,7 +339,7 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 			CFtpServerEx->SendReply( Client, "221 Goodbye.\r\n");
 			break;
 		} 
-		else if( !strcmp( pszCmd, "USER" ) )						//======================== QUIT
+		else if( !strcmp( pszCmd, "USER" ) )						//======================== USER
 		{
 			if( Client->bIsLogged == true )
 			{
@@ -608,13 +608,13 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 					unsigned int uDataPort2 = Client->usDataPort % 256;
 					unsigned int uDataPort1 = ( Client->usDataPort - uDataPort2 ) / 256;
 
-					XNADDR          g_xnaddr;
-					DWORD dwRet;
-					do
-					{
-						dwRet = XNetGetTitleXnAddr( &g_xnaddr );
-					} while( dwRet == XNET_GET_XNADDR_PENDING );
-					unsigned long ulIp = ntohl( g_xnaddr.ina.S_un.S_addr );
+					//XNADDR          g_xnaddr;
+					//DWORD dwRet;
+					//do
+					//{
+					//	dwRet = XNetGetTitleXnAddr( &g_xnaddr );
+					//} while( dwRet == XNET_GET_XNADDR_PENDING );
+					unsigned long ulIp = ntohl( m_xnaddr.ina.S_un.S_addr );
 
 					//unsigned long ulIp = ntohl( INADDR_ANY);
 
@@ -698,8 +698,12 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 			if( pszCmdArg ) 
 			{
 				pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
+
+				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+				CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
 				struct tm *t;
-				if( pszPath && !stat( pszPath, &st ) && (t = gmtime((time_t *) &(st.st_mtime))) ) 
+				if( pszPath && !stat( xdkPath, &st ) && (t = gmtime((time_t *) &(st.st_mtime))) ) 
 				{
 					CFtpServerEx->SendReply2( Client, "213 %04d%02d%02d%02d%02d%02d\r\n",
 						t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
@@ -793,10 +797,14 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 				}
 
 				pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
-				if( pszPath && stat( pszPath, &st ) == 0 )
+
+				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+				CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
+				if( pszPath && stat( xdkPath, &st ) == 0 )
 				{
 					Client->eStatus = CFtpServer::Status_Downloading;
-					strcpy( Client->CurrentTransfer.szPath, pszPath );
+					strcpy( Client->CurrentTransfer.szPath, xdkPath );
 					Client->CurrentTransfer.Client = Client;
 					CFtpServerEx->SendReply( Client, "150 Opening data connection.\r\n");
 					Client->CurrentTransfer.hTransferThread =
@@ -866,16 +874,21 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 				{
 					Client->eStatus = CFtpServer::Status_Uploading;
 					Client->CurrentTransfer.Client = Client;
+
+					char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+					CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
 					if( !strcmp( pszCmd, "APPE" ) )
 					{
-						if( stat( pszPath, &st ) == 0 ) 
+						if( stat( xdkPath, &st ) == 0 ) 
 						{
 							Client->CurrentTransfer.RestartAt = st.st_size;
 						}
 						else
 							Client->CurrentTransfer.RestartAt = 0;
 					}
-					strcpy( Client->CurrentTransfer.szPath, pszPath ); delete [] pszPath;
+					strcpy( Client->CurrentTransfer.szPath, xdkPath );
+					delete [] pszPath;
 					if( !strcmp( pszCmd, "STOU" ) ) 
 					{
 						CFtpServerEx->SendReply2( Client, "150 FILE: %s\r\n", szTempPath );
@@ -904,7 +917,12 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 			if( pszCmdArg ) 
 			{
 				pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
-				if( pszPath && stat( pszPath, &st ) == 0 ) {
+
+				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+				CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
+				if( pszPath && stat( xdkPath, &st ) == 0 ) 
+				{
 					CFtpServerEx->SendReply2( Client,
 						"213 %I64i\r\n",
 						st.st_size );
@@ -974,9 +992,12 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 			if( pszCmdArg )
 			{
 				pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
-				if( pszPath && stat( pszPath, &st ) == 0 ) 
+				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+				CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
+				if( pszPath && stat( xdkPath, &st ) == 0 ) 
 				{
-					Client->pszRenameFromPath = strdup( pszPath );
+					Client->pszRenameFromPath = strdup( xdkPath );
 					CFtpServerEx->SendReply( Client, "350 File or directory exists, ready for destination name.\r\n");
 				} 
 				else
@@ -997,7 +1018,10 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 				if( Client->pszRenameFromPath )
 				{
 					pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
-					if( pszPath && rename( Client->pszRenameFromPath, pszPath ) == 0 ) 
+					char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+					CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
+					if( pszPath && rename( Client->pszRenameFromPath, xdkPath ) == 0 ) 
 					{
 						CFtpServerEx->SendReply( Client, "250 Rename successful.\r\n");
 					} 
@@ -1029,9 +1053,13 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 			if( pszCmdArg ) 
 			{
 				pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
-				if( pszPath && stat( pszPath, &st ) != 0 ) 
+
+				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+				CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
+				if( pszPath && stat( xdkPath, &st ) != 0 ) 
 				{
-					if( _mkdir( pszPath ) == -1 ) 
+					if( _mkdir( xdkPath ) == -1 ) 
 					{
 						CFtpServerEx->SendReply( Client, "550 MKD Error Creating DIR.\r\n");
 					} 
@@ -1061,9 +1089,13 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 			if( pszCmdArg ) 
 			{
 				pszPath = CFtpServerEx->BuildPath( Client->User->szStartDir, Client->szCurrentDir, pszCmdArg );
-				if( pszPath && stat( pszPath, &st ) == 0 ) 
+
+				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
+				CFtpServerEx->filePathXDK(pszPath,xdkPath);
+
+				if( pszPath && stat( xdkPath, &st ) == 0 ) 
 				{
-					if ( _rmdir( pszPath ) == -1 ) 
+					if ( _rmdir( xdkPath ) == -1 ) 
 					{
 						CFtpServerEx->SendReply( Client, "450 Internal error deleting the directory.\r\n");
 					} 
@@ -1780,128 +1812,138 @@ bool CFtpServer::SimplifyPath( char *pszPath )
 	}
 
 
-	while( ( a = strstr( pszPath, "//") ) != NULL )
+	try
 	{
-		memcpy( a, a + 1 , strlen( a ) );
-	}
-	while( ( a = strstr( pszPath, "/./" ) ) != NULL )
-	{
-		memcpy( a, a + 2, strlen( a + 1 ) );
-	}
-	if( !strncmp( pszPath, "./", 2 ) )
-	{
-		memcpy( pszPath, pszPath + 1, strlen( pszPath ) );
-	}
-	if( !strncmp( pszPath, "../", 3) )
-	{
-		memcpy( pszPath, pszPath + 2, strlen( pszPath + 1 ) );
-	}
-	while( ( a = strstr( pszPath, "/." ) ) != NULL && a[ 2 ] == '\0' ) 
-	{
-		if( a != pszPath ) 
+		while( ( a = strstr( pszPath, "//") ) != NULL )
 		{
-			a[ 0 ] = '\0';
+			memcpy( a, a + 1 , strlen( a ) );
 		}
-		else
+		while( ( a = strstr( pszPath, "/./" ) ) != NULL )
 		{
-			a[ 1 ] = '\0';
+			memcpy( a, a + 2, strlen( a + 1 ) );
 		}
-	}
-
-	a = pszPath; 
-	char *b = NULL;
-	while( a && (a = strstr( a, "/..")) ) 
-	{
-		if( a[3] == '/' || a[3] == '\0' ) 
+		if( !strncmp( pszPath, "./", 2 ) )
 		{
-			if( a == pszPath ) 
+			memcpy( pszPath, pszPath + 1, strlen( pszPath ) );
+		}
+		if( !strncmp( pszPath, "../", 3) )
+		{
+			memcpy( pszPath, pszPath + 2, strlen( pszPath + 1 ) );
+		}
+		while( ( a = strstr( pszPath, "/." ) ) != NULL && a[ 2 ] == '\0' ) 
+		{
+			if( a != pszPath ) 
 			{
-				if( a[3] == '/' ) 
+				a[ 0 ] = '\0';
+			}
+			else
+			{
+				a[ 1 ] = '\0';
+			}
+		}
+
+		a = pszPath; 
+		char *b = NULL;
+		while( a && (a = strstr( a, "/..")) ) 
+		{
+			if( a[3] == '/' || a[3] == '\0' ) 
+			{
+				if( a == pszPath ) 
 				{
-					memcpy( pszPath, pszPath + 3, strlen( pszPath + 2 ) );
+					if( a[3] == '/' ) 
+					{
+						memcpy( pszPath, pszPath + 3, strlen( pszPath + 2 ) );
+					} 
+					else 
+					{
+						pszPath[ 1 ] = '\0';
+						break;
+					}
 				} 
 				else 
 				{
-					pszPath[ 1 ] = '\0';
-					break;
+					b = a;
+					while( b != pszPath ) 
+					{
+						b--;
+						if( *b == '/' )
+						{
+							if( b == pszPath || ( b == ( pszPath + 2 ) && isalpha( pszPath[ 0 ] ) && pszPath[ 1 ] == ':' ) ) 
+							{
+								if( a[ 3 ] == '/' ) 
+								{ // e.g. '/foo/../' 'C:/lol/../'
+									memcpy( b + 1 , a + 4, strlen( a + 3 ) );
+								} 
+								else // e.g. '/foo/..' 'C:/foo/..'
+								{
+									b[ 1 ] = '\0';
+								}
+							}
+							else
+							{
+								memcpy( b, a + 3, strlen( a + 2 ) );
+							}
+							a = strstr( pszPath, "/..");
+							break;
+						} 
+						else if( b == pszPath ) 
+						{
+							if( a[ 3 ] == '/' ) 
+							{ // e.g. C:/../
+								memcpy( a + 1 , a + 4, strlen( a + 3 ) );
+							} 
+							else // e.g. C:/..
+							{
+								a[ 1 ] = '\0';
+							}
+							a = strstr( pszPath, "/..");
+						}
+					}
+				}
+			} 
+			else
+			{
+				a++;
+			}
+		}
+
+		if( !strcmp( pszPath, ".." ) || !strcmp( pszPath, "." ) )
+		{
+			strcpy( pszPath, "/" );
+		}
+
+		int iPathLen = strlen( pszPath );
+		if(!isleadbyte(pszPath[0]))
+		{
+			if(isalpha( (unsigned char )pszPath[0] ) && pszPath[1] == ':' && pszPath[2] == '/' ) 
+			{
+				if( iPathLen > 3 && pszPath[ iPathLen -1 ] == '/' ) 
+				{ // "C:/some/path/"
+					pszPath[ iPathLen - 1 ] = '\0';
+					iPathLen += -1;
 				}
 			} 
 			else 
 			{
-				b = a;
-				while( b != pszPath ) 
+				if( pszPath[ 0 ] == '/' ) 
 				{
-					b--;
-					if( *b == '/' )
+					if( iPathLen > 1 && pszPath[ iPathLen - 1 ] == '/' ) 
 					{
-						if( b == pszPath || ( b == ( pszPath + 2 ) && isalpha( pszPath[ 0 ] ) && pszPath[ 1 ] == ':' ) ) 
-						{
-							if( a[ 3 ] == '/' ) 
-							{ // e.g. '/foo/../' 'C:/lol/../'
-								memcpy( b + 1 , a + 4, strlen( a + 3 ) );
-							} 
-							else // e.g. '/foo/..' 'C:/foo/..'
-							{
-								b[ 1 ] = '\0';
-							}
-						}
-						else
-						{
-							memcpy( b, a + 3, strlen( a + 2 ) );
-						}
-						a = strstr( pszPath, "/..");
-						break;
-					} 
-					else if( b == pszPath ) 
-					{
-						if( a[ 3 ] == '/' ) 
-						{ // e.g. C:/../
-							memcpy( a + 1 , a + 4, strlen( a + 3 ) );
-						} 
-						else // e.g. C:/..
-						{
-							a[ 1 ] = '\0';
-						}
-						a = strstr( pszPath, "/..");
+						pszPath[ iPathLen - 1 ] = '\0'; // "/some/path/"
+						iPathLen += -1;
 					}
+				} 
+				else if( pszPath[ iPathLen - 1 ] == '/' ) 
+				{
+					pszPath[ iPathLen - 1 ] = '\0'; // "some/path/"
+					iPathLen += -1;
 				}
 			}
-		} 
-		else
-		{
-			a++;
 		}
 	}
+	catch(...)
+	{
 
-	if( !strcmp( pszPath, ".." ) || !strcmp( pszPath, "." ) )
-	{
-		strcpy( pszPath, "/" );
-	}
-
-	int iPathLen = strlen( pszPath );
-	if( isalpha( pszPath[0] ) && pszPath[1] == ':' && pszPath[2] == '/' ) 
-	{
-		if( iPathLen > 3 && pszPath[ iPathLen -1 ] == '/' ) 
-		{ // "C:/some/path/"
-			pszPath[ iPathLen - 1 ] = '\0';
-			iPathLen += -1;
-		}
-	} 
-	else 
-	{
-		if( pszPath[ 0 ] == '/' ) 
-		{
-			if( iPathLen > 1 && pszPath[ iPathLen - 1 ] == '/' ) 
-			{
-				pszPath[ iPathLen - 1 ] = '\0'; // "/some/path/"
-				iPathLen += -1;
-			}
-		} 
-		else if( pszPath[ iPathLen - 1 ] == '/' ) 
-		{
-			pszPath[ iPathLen - 1 ] = '\0'; // "some/path/"
-			iPathLen += -1;
-		}
 	}
 	return true;
 }

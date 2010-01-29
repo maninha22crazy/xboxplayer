@@ -24,6 +24,8 @@ struct XMLElementAttribute
 };
 typedef std::vector <XMLElementAttribute> XMLElementAttributeList;
 
+
+
 namespace ATG
 {
 
@@ -97,8 +99,6 @@ enum XATGLoaderFlags
 class XmlFileParser : public ISAXCallback
 {
 public:
-	UINT			m_nType;			// 节点类型
-	ArcadeInfo*		pArcadeInfo;		
     HRESULT  PrepareForThreadedLoad( CRITICAL_SECTION* pCriticalSection );
     HRESULT  LoadXMLFile( const CHAR* strFileName,void* pNode,UINT	nType = 0);
     CHAR* GetParseErrorMessage();
