@@ -8,16 +8,21 @@ XexDashの特徴：
         ：背景を変更（カスタマイズ）する機能を提供します。
         ：多国語対応する機能を提供します。
         ：背景、アイコン表示機能を提供します。
-        ：デフォルトデバイス変更機能を提供します</value></data>
+        ：デフォルトデバイス変更機能を提供します
+        : FTP, XBLA機能を提供します。
+                
+       http://xexdash.betalog.com/   
+       http://xbox.2dcast.com
+       by JSTEAM 2010.1.29</value></data>
 <data name="MainScene.listMenu.ItemsText"><value>デバイス変更
-游戏类型
+ゲーム種類
 言語変更
 背景変更
 背景設定
 XDKへ
 DASHへ
 </value></data>
-<data name="MainScene.listGameType.ItemsText"><value>普通游戏
+<data name="MainScene.listGameType.ItemsText"><value>ゲーム
 XBLA
 </value></data>
 </root>

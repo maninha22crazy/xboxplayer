@@ -3,22 +3,23 @@
 <data name="MainScene.labelY.Text"><value>Menu</value></data>
 <data name="MainScene.labelB.Text"><value>Back</value></data>
 <data name="MainScene.labelValueInfo.Text"><value>description：
-        XexDash is a game programme reading software, opereted on xbox160 development machines and its gaming consoles’ xbrboot system.
+        XexDash is a game programme reading software, opereted on xbox360 development machines and its gaming consoles’ xbrboot system.
 updates
        :Better System Interface 
        :More language options
-       : Game's backgrounds, ID, names and ICO display
-       : self-defining backgrounds
-       :Memorize the chosen drive</value></data>
+       :Game's backgrounds, ID, names and ICO display
+       :self-defining backgrounds
+       :Memorize the chosen drive
+       :FTP, XBLA</value></data>
 <data name="MainScene.listMenu.ItemsText"><value>Driver Disk
-游戏类型
+Type
 Language
 Game Background
 Set the Background 
 Return to XDK
 Return to Dash
 </value></data>
-<data name="MainScene.listGameType.ItemsText"><value>普通游戏
+<data name="MainScene.listGameType.ItemsText"><value>GAME
 XBLA
 </value></data>
 </root>

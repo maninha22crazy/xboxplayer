@@ -1058,6 +1058,7 @@ class CMyMainScene : public CXuiSceneImpl
 				{
 					m_GameIcoImage.SetImagePath(L"");
 				}
+				m_GameImage.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\arcade.jpg");
 			}
 		}
 

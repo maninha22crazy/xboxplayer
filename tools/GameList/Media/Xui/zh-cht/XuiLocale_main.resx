@@ -9,7 +9,12 @@
         ：增加多國語言及其支持
         ：增加遊戲背景、ID、標題、ICO顯示
         ：增加軟件自定義背景圖
-        ：軟件啟動默認選擇最後的驅動器</value></data>
+        ：軟件啟動默認選擇最後的驅動器
+        : 增加FTP、XBLA支持
+        
+       http://xexdash.betalog.com/   
+       http://xbox.2dcast.com
+       by JSTEAM 2010.1.29</value></data>
 <data name="MainScene.listMenu.ItemsText"><value>設備切換
 遊戲類型
 語言選擇
@@ -18,7 +23,7 @@
 返回XDK
 返回DASH
 </value></data>
-<data name="MainScene.listGameType.ItemsText"><value>普通遊戲
+<data name="MainScene.listGameType.ItemsText"><value>零售遊戲
 XBLA
 </value></data>
 </root>
