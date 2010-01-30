@@ -319,7 +319,7 @@ VOID SaveConfig(VOID)
 
 	parser.StartElement("item");
 	parser.AddAttribute("name","wallPath");
-	parser.AddAttribute("value",m_ConfigNode.strWallPath);
+	parser.AddAttribute("value",UnicodeToAnsi(m_ConfigNode.strWallPath));			// debug:中文目录保存后，打开无背景的问题 date:2010-01-30 by:EME
 	parser.AddAttribute("description","");
 	parser.EndElement();
 
@@ -495,71 +495,70 @@ void LoadXblaList()
 				if( hFind1 != INVALID_HANDLE_VALUE )
 				{        
 					DWORD NChars;
-					if( !ReadFile( hFind1, m_pReadBuf, 0x1792, &NChars, NULL ))
+					if( ReadFile( hFind1, m_pReadBuf, 0x1792, &NChars, NULL ))
 					{
-						CloseHandle(hFind1);
-						return;
+
+						GameNode *pGNode;
+						pGNode = (GameNode *)malloc( sizeof(GameNode));
+						memset(pGNode, 0,  sizeof(GameNode));
+
+						ofstream out2;
+						m_pReadBuf[ NChars ] = '\0';
+						m_pReadBuf[ NChars + 1] = '\0';
+
+
+						char *ptr;
+						size_t length;
+
+						//================================== 提取ID begin ==================================================
+						ptr =  (CHAR *)m_pReadBuf + nTitleID;
+						swprintf(pGNode->strTitleID, L"%-8X", ReadUInt32(ptr));
+						//================================== 提取ID end ==================================================
+
+
+						//================================== 提取标题 begin ==================================================
+						ptr =  (CHAR *)m_pReadBuf + nContentTitle;
+						int n = 0;
+						int j =0;
+						while(n < 0x40 )
+						{
+							BYTE bChar = (BYTE)ptr[n++];
+							if(bChar != 0)
+							{
+								pGNode->strGameTitle[j++] = (CHAR)bChar;
+							}
+						}
+						pGNode->strGameTitle[j] = '\0';
+						wcscpy(pGNode->strName,pGNode->strGameTitle);
+
+						//================================== 提取标题 end ==================================================
+
+						memset(pGNode->strPath, 0, MAX_PATH);
+
+						switch(nFindType)
+						{
+						case 1:
+							sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\000D0000\\%s", ffd.cFileName,ffd1.cFileName);
+							break;
+						case 2:
+							sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\000D0000\\%s", ffd.cFileName,ffd1.cFileName);
+							break;
+						case 3:
+							sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\00070000\\%s", ffd.cFileName,ffd1.cFileName);
+							break;
+						case 4:
+							sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\00050000\\%s", ffd.cFileName,ffd1.cFileName);
+							break;
+						}
+						m_GameList.push_back(*pGNode);
 					}
 					CloseHandle(hFind1) ;
-
-					GameNode *pGNode;
-					pGNode = (GameNode *)malloc( sizeof(GameNode));
-					memset(pGNode, 0,  sizeof(GameNode));
-
-					ofstream out2;
-					m_pReadBuf[ NChars ] = '\0';
-					m_pReadBuf[ NChars + 1] = '\0';
-
-
-					char *ptr;
-					size_t length;
-
-					//================================== 提取ID begin ==================================================
-					ptr =  (CHAR *)m_pReadBuf + nTitleID;
-					swprintf(pGNode->strTitleID, L"%-8X", ReadUInt32(ptr));
-					//================================== 提取ID end ==================================================
-
-
-					//================================== 提取标题 begin ==================================================
-					ptr =  (CHAR *)m_pReadBuf + nContentTitle;
-					int n = 0;
-					int j =0;
-					while(n < 0x40 )
-					{
-						BYTE bChar = (BYTE)ptr[n++];
-						if(bChar != 0)
-						{
-							pGNode->strGameTitle[j++] = (CHAR)bChar;
-						}
-					}
-					pGNode->strGameTitle[j] = '\0';
-					wcscpy(pGNode->strName,pGNode->strGameTitle);
-
-					//================================== 提取标题 end ==================================================
-
-					memset(pGNode->strPath, 0, MAX_PATH);
-
-					switch(nFindType)
-					{
-					case 1:
-						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\000D0000\\%s", ffd.cFileName,ffd1.cFileName);
-						break;
-					case 2:
-						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\000D0000\\%s", ffd.cFileName,ffd1.cFileName);
-						break;
-					case 3:
-						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\00070000\\%s", ffd.cFileName,ffd1.cFileName);
-						break;
-					case 4:
-						sprintf(pGNode->strPath, "Content\\0000000000000000\\%s\\00050000\\%s", ffd.cFileName,ffd1.cFileName);
-						break;
-					}
-					m_GameList.push_back(*pGNode);
 				}
 		  }
       }
    }
    while (FindNextFile(hFind, &ffd) != 0);
+   FindClose( hFind );
 }
 
 //--------------------------------------------------------------------------------------
@@ -1030,6 +1029,8 @@ class CMyMainScene : public CXuiSceneImpl
 		}
 		else
 		{
+			m_GameIcoImage.SetImagePath(L"");
+
 			char mntpth[] = "dice";
 			UINT32 ret;
 
@@ -1054,10 +1055,10 @@ class CMyMainScene : public CXuiSceneImpl
 					m_Value.SetText(ArcadeInfoNode.strName );
 					m_labelArcDescription.SetText(ArcadeInfoNode.strDescription);
 				}
-				else
-				{
-					m_GameIcoImage.SetImagePath(L"");
-				}
+				//else
+				//{
+				//	m_GameIcoImage.SetImagePath(L"");
+				//}
 				m_GameImage.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\arcade.jpg");
 			}
 		}
@@ -1661,6 +1662,7 @@ VOID __cdecl main()
 	hddexist = (Mount( "Usb1","\\Device\\Mass1") == S_OK);
 	hddexist = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
 	hddexist = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
+	hddexist = (Mount( "Flash","\\Device\\Flash") == S_OK);
 
 	DWORD dwRet;
 	do
@@ -1768,29 +1770,29 @@ VOID __cdecl main()
 
 	// edit:仅支持720p分辨率 date:2010-01-13 by:EME
     // 根据不同分辨率载入相应的场景文件.
-	//XVIDEO_MODE VideoMode; 
-	//HXUIOBJ hScene;
-	//XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
-	//XGetVideoMode( &VideoMode );
+	XVIDEO_MODE VideoMode; 
+	HXUIOBJ hScene;
+	XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
+	XGetVideoMode( &VideoMode );
 	
-	//if(VideoMode.dwDisplayHeight < 720)
-	//{
-	//	m_nPageSize = 10;
-	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_480.xur", &hScene );
-	//}
-	//else if(VideoMode.dwDisplayHeight < 1080)
-	//{
-	//	m_nPageSize = 12;
-	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", &hScene );
-	//}
+	if(VideoMode.dwDisplayHeight == 768 && VideoMode.dwDisplayWidth == 1024)
+	{
+		m_nPageSize = 15;
+		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main_1024768.xur", &hScene );
+	}
+	else// if(VideoMode.dwDisplayHeight < 1080)
+	{
+		m_nPageSize = 13;
+		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", &hScene );
+	}
 	//else
 	//{
 	//	m_nPageSize = 20;
 	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", &hScene );
 	//}
 	
-	m_nPageSize = 13;
-	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
+	//m_nPageSize = 13;
+	//app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
 
 	app.Run();
 

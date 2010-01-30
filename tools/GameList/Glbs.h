@@ -8,7 +8,7 @@ struct device_table m_DeviceMappings[] = {
 			{ "Usb1",L"Usb1",   IDS_DRIVE_USB1,  false,	  true  },
 			{ "Usb2",L"Usb2",   IDS_DRIVE_USB2,  false,	  true  },
 			{ "Dvd", L"Dvd",  IDS_DRIVE_DVD,  false,	  true  },
-			{ "Dvd", L"Flash",  IDS_DRIVE_FLASH,  false,	  true  }
+			{ "Flash", L"Flash",  IDS_DRIVE_FLASH,  false,	  true  }
 			};
 
 struct device_table m_curDevice;
