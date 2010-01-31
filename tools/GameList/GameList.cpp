@@ -1785,7 +1785,7 @@ VOID __cdecl main()
 	else// if(VideoMode.dwDisplayHeight < 1080)
 	{
 		m_nPageSize = 13;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_720.xur", &hScene );
+		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", &hScene );
 	}
 	//else
 	//{
