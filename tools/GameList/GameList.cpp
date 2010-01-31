@@ -1663,6 +1663,8 @@ VOID __cdecl main()
 	hddexist = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
 	hddexist = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
 	hddexist = (Mount( "Flash","\\Device\\Flash") == S_OK);
+	hddexist = (Mount( "HddX","\\Device\\Harddisk0\\SystemPartition") == S_OK);
+	
 
 	DWORD dwRet;
 	do

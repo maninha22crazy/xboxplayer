@@ -644,7 +644,8 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 
 
 				if( !strcmp( pszCmdArg, "/" ) || !strcmp( pszCmdArg, "Hdd") || !strcmp( pszCmdArg, "Devkit") || !strcmp( pszCmdArg, "Usb0") 
-					|| !strcmp( pszCmdArg, "Usb1") || !strcmp( pszCmdArg, "Usb2") || !strcmp( pszCmdArg, "Dvd")|| !strcmp( pszCmdArg, "Flash"))		
+					|| !strcmp( pszCmdArg, "Usb1") || !strcmp( pszCmdArg, "Usb2") || !strcmp( pszCmdArg, "Dvd")|| !strcmp( pszCmdArg, "Flash")
+					|| !strcmp( pszCmdArg, "HddX"))		
 				{
 					strcpy( Client->szCurrentDir, pszPath );
 					CFtpServerEx->SendReply( Client, "250 CWD command successful.\r\n");
@@ -655,7 +656,8 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 					char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
 					CFtpServerEx->filePathXDK(pszPath,xdkPath);
 					if(!strcmp( xdkPath, "Hdd") || !strcmp( xdkPath, "Devkit") || !strcmp( xdkPath, "Usb0") 
-					|| !strcmp( xdkPath, "Usb1") || !strcmp( xdkPath, "Usb2") || !strcmp( xdkPath, "Dvd")|| !strcmp( pszCmdArg, "Flash"))		
+					|| !strcmp( xdkPath, "Usb1") || !strcmp( xdkPath, "Usb2") || !strcmp( xdkPath, "Dvd") || !strcmp( xdkPath, "Flash")
+					|| !strcmp( xdkPath, "HddX"))		
 					{
 						strcpy( Client->szCurrentDir, pszPath );
 						CFtpServerEx->SendReply( Client, "250 CWD command successful.\r\n");
@@ -953,7 +955,8 @@ unsigned CFtpServer::ClientShell( void *pvParam )
 				char xdkPath[ MAX_PATH + 64 + 100 + 100 ];
 				CFtpServerEx->filePathXDK(pszPath,xdkPath);
 				if(!strcmp( xdkPath, "Hdd") || !strcmp( xdkPath, "Devkit") || !strcmp( xdkPath, "Usb0") 
-				|| !strcmp( xdkPath, "Usb1") || !strcmp( xdkPath, "Usb2") || !strcmp( xdkPath, "Dvd")|| !strcmp( xdkPath, "Flash"))		
+				|| !strcmp( xdkPath, "Usb1") || !strcmp( xdkPath, "Usb2") || !strcmp( xdkPath, "Dvd") || !strcmp( xdkPath, "Flash")
+				|| !strcmp( xdkPath, "HddX") )		
 				{
 					CFtpServerEx->SendReply( Client, "550 Can' t Remove or Access Error.\r\n");
 					continue;
@@ -1267,7 +1270,8 @@ bool CFtpServer::LIST_Command( struct CFtpServer::ClientNode *Client, char *pszC
 
 	bool isDevice = false;
 	if(!strcmp( xdkPath, "Hdd") || !strcmp( xdkPath, "Devkit") || !strcmp( xdkPath, "Usb0") 
-	|| !strcmp( xdkPath, "Usb1") || !strcmp( xdkPath, "Usb2") || !strcmp( xdkPath, "Dvd")|| !strcmp( xdkPath, "Flash"))		
+	|| !strcmp( xdkPath, "Usb1") || !strcmp( xdkPath, "Usb2") || !strcmp( xdkPath, "Dvd")|| !strcmp( xdkPath, "Flash")
+	|| !strcmp( xdkPath, "HddX") )		
 	{
 		isDevice = true;
 	}

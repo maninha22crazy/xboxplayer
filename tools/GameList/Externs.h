@@ -13,6 +13,7 @@
 #define IDS_DRIVE_DVD							4
 #define IDS_DRIVE_FLASH						5
 #define IDS_DRIVE_HDD							6
+#define IDS_DRIVE_HDDX							7
 
 // 设备节点信息
 struct device_table 
@@ -62,7 +63,7 @@ struct ConfigNode
 };
 
 typedef std::vector <GameNode> GameList;
-extern struct device_table m_DeviceMappings[7];
+extern struct device_table m_DeviceMappings[8];
 extern LPCWSTR LocaleLanguage[11];						// 多语言支持
 extern ConfigNode m_ConfigNode;						// 配置信息
 extern ArcadeInfo m_ArcadeInfo;						// 当前选中的arc信息
