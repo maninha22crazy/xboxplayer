@@ -1574,6 +1574,8 @@ public:
 	XUI_IMPLEMENT_CLASS( CMyMainScene, L"MyMainScene", XUI_CLASS_SCENE )
 };
 
+int HOverscan = 0;
+int VOverscan = 0;
 
 //--------------------------------------------------------------------------------------
 // Main XUI host class. It is responsible for registering scene classes and provide
@@ -1587,6 +1589,13 @@ protected:
 
 	// Override UnregisterXuiClasses so that CMyApp can unregister classes. 
 	virtual HRESULT UnregisterXuiClasses();
+
+public:
+    DWORD                               dwWidth;
+    DWORD                               dwHeight;
+
+	void GetVidMode();
+	HRESULT Render();
 };
 
 
@@ -1620,6 +1629,57 @@ HRESULT CMyApp::UnregisterXuiClasses()
 	return S_OK;
 }
 
+//--------------------------------------------------------------------------------------
+// Name: RegisterXuiClasses
+// Desc: Registers all the scene classes.
+//--------------------------------------------------------------------------------------
+void CMyApp::GetVidMode()
+{
+    XVIDEO_MODE VideoMode;
+    XGetVideoMode( &VideoMode );
+
+	dwWidth = VideoMode.dwDisplayWidth;
+	dwHeight = VideoMode.dwDisplayHeight;
+}
+
+HRESULT CMyApp::Render()
+{
+
+	ASSERT(m_hDC != NULL);
+    HRESULT hr = XuiRenderBegin(m_hDC, D3DCOLOR_ARGB(255, 0, 0, 0));
+    if (FAILED(hr))
+        return hr;
+
+
+    D3DXMATRIX matOrigView;
+    XuiRenderGetViewTransform( m_hDC, &matOrigView );
+
+    // scale depending on the height of the render target
+    D3DXMATRIX matView;
+	int NewWidth = dwWidth - (HOverscan * 2);
+	int NewHeight = dwHeight - (VOverscan * 2);
+    D3DXVECTOR2 vScaling = D3DXVECTOR2( NewWidth / 1280.0f, NewHeight / 720.0f );
+	D3DXVECTOR2 vTranslation = D3DXVECTOR2( (float)HOverscan, (float)VOverscan );
+    D3DXMatrixTransformation2D( &matView, NULL, 0.0f, &vScaling, NULL, 0.0f, &vTranslation );
+    XuiRenderSetViewTransform( m_hDC, &matView );
+
+
+	XUIMessage msg;
+    XUIMessageRender msgRender;
+    XuiMessageRender(&msg, &msgRender, m_hDC, 0xffffffff, XUI_BLEND_NORMAL);
+    XuiSendMessage(m_hObjRoot, &msg);
+
+
+    XuiRenderSetViewTransform( m_hDC, &matOrigView );
+
+	XuiRenderEnd(m_hDC);
+
+    XuiRenderPresent(m_hDC, NULL, NULL, NULL);
+	Sleep(15);
+
+    return S_OK;
+
+}
 
 //--------------------------------------------------------------------------------------
 // Name: main()
@@ -1687,6 +1747,7 @@ VOID __cdecl main()
 	} 
 
 	CMyApp app;
+	app.GetVidMode(); 
 
 	HRESULT hr = app.Init( XuiD3DXTextureLoader );
 	if( FAILED( hr ) )
@@ -1777,24 +1838,24 @@ VOID __cdecl main()
 	XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
 	XGetVideoMode( &VideoMode );
 	
-	if(VideoMode.dwDisplayHeight == 768 && VideoMode.dwDisplayWidth == 1024)
-	{
-		m_nPageSize = 15;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main_1024768.xur", &hScene );
-	}
-	else// if(VideoMode.dwDisplayHeight < 1080)
-	{
-		m_nPageSize = 13;
-		app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", &hScene );
-	}
+	//if(VideoMode.dwDisplayHeight == 768 && VideoMode.dwDisplayWidth == 1024)
+	//{
+	//	m_nPageSize = 15;
+	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main_1024768.xur", &hScene );
+	//}
+	//else// if(VideoMode.dwDisplayHeight < 1080)
+	//{
+	//	m_nPageSize = 13;
+	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", &hScene );
+	//}
 	//else
 	//{
 	//	m_nPageSize = 20;
 	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", &hScene );
 	//}
 	
-	//m_nPageSize = 13;
-	//app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
+	m_nPageSize = 13;
+	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
 
 	app.Run();
 

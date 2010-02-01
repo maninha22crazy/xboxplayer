@@ -652,7 +652,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Build XUI project files"
-						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\XuiLocale_main_1024768.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\ko-kr\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx Media\xui\A.png Media\xui\B.png Media\xui\Y.png Media\xui\B.png Media\xui\LB.png Media\xui\B.png Media\xui\RB.png Media\xui\B.png Media\xui\BottomImage.png Media\xui\arcade.jpg"
+						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\ko-kr\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx Media\xui\A.png Media\xui\B.png Media\xui\Y.png Media\xui\B.png Media\xui\LB.png Media\xui\B.png Media\xui\RB.png Media\xui\B.png Media\xui\BottomImage.png Media\xui\arcade.jpg"
 						Outputs="$(OutDir)\media\XuiLocale.xzp"
 					/>
 				</FileConfiguration>
