@@ -40,6 +40,7 @@ struct GameNode
 	WCHAR	strTitleID[0x40];
 	WCHAR	strGameTitle[MAX_PATH];
 	BOOL	bIsRegion;
+
 };
 
 // Arc节点信息（从xml中解析）
@@ -63,6 +64,7 @@ struct ConfigNode
 };
 
 typedef std::vector <GameNode> GameList;
+
 extern struct device_table m_DeviceMappings[8];
 extern LPCWSTR LocaleLanguage[11];						// 多语言支持
 extern ConfigNode m_ConfigNode;						// 配置信息

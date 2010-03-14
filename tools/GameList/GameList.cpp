@@ -27,7 +27,39 @@
 
 #include <xam.h>
 #include "xfilecache.h"
+#include "smc.h"
 
+#include "CFtpClient.h"
+#include <vector>
+
+// 下载线程
+static DWORD WINAPI DownFileThread(LPVOID pAram);
+
+SOCKET m_sockDateDownT;			// 数据传送socket(下载)
+SOCKET m_sockClientDownT;		    // 命令socket(下载)
+CFtpClient m_ftpClient;                  //  下载操作
+
+
+typedef std::vector <DownNode> DownList;
+DownList m_DownList;
+
+struct xex_rec 
+{
+	int var1;
+	int var2;
+};
+
+struct header_1
+{
+	int mediaid;
+	int version1;
+	int version2;
+	int titleid;
+	char unused;
+	char unused2;
+	char diskno;
+	char diskcount;
+};
 
 #define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
 typedef struct _STRING 
@@ -60,11 +92,13 @@ UINT32 (*XamContentClose)(char*,UINT32*);
 
 
 
-
 using namespace std; 
 
 CXuiImageElement m_WallImage;
 CXuiList m_List;
+smc MeinSMC;
+float * temperaturen;
+int FSpeed = 60;
 
 
 //--------------------------------------------------------------------------------------
@@ -402,9 +436,9 @@ void LoadXblaList()
    DWORD dwError=0;
 
    int nFindType = 0;
-    struct stat st;
+   struct stat st;
 
-	int nCount = 0;
+   int nCount = 0;
    char szDir[MAX_PATH];
    char szDir1[MAX_PATH];
    memset(szDir, 0, MAX_PATH);
@@ -581,11 +615,14 @@ VOID LoadGameList()
 	hFind = FindFirstFile( strFind, &wfd );
 
 	HANDLE hFileFind;
+    struct stat st;
 	if( INVALID_HANDLE_VALUE != hFind )
 	{
 		do
 		{
-			if(FILE_ATTRIBUTE_DIRECTORY==wfd.dwFileAttributes){
+            // debug:修正存档的属性的问题 date:2010-02-24
+			if(FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes)
+            {
 				memset(lpNewNameBuf, 0, MAX_PATH);
 				sprintf(lpNewNameBuf, "%s\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
 				HANDLE hFile = CreateFile(lpNewNameBuf,    // file to open
@@ -622,44 +659,87 @@ VOID LoadGameList()
 
 					sprintf(pGlist->strFileName, "%s", wfd.cFileName);
 
+                    memset(pGlist->strPath, 0, MAX_PATH);
+					sprintf(pGlist->strPath, "%s\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
+
+                    // 获得xex文件的头文件信息
+                    XEXParse(pGlist);
+
 					//==================================== 查找是否存在游戏背景图 begin ================================
 					bool findAll = true;
 					CHAR   strImg[MAX_PATH];
 					memset(strImg, 0, MAX_PATH);
 					sprintf(strImg, "%s\\hidden\\%s\\default_wall.png", m_curDevice.deviceName,wfd.cFileName);
 
-					hFileFind = CreateFile( strImg, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
-					if( hFileFind == INVALID_HANDLE_VALUE )
-					{        
-						findAll = false;
-					}
-					else
-					{
-						memset(strImg, 0, MAX_PATH);
+					//hFileFind = CreateFile( strImg, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
+					//if( hFileFind == INVALID_HANDLE_VALUE )
+					//{        
+					//	findAll = false;
+					//}
+					//else
+					//{
+					//	memset(strImg, 0, MAX_PATH);
+					//	sprintf(strImg, "file://%s/hidden/%s/default_wall.png", m_curDevice.deviceName,wfd.cFileName);
+					//	mbstowcs(pGlist->strWallPath,strImg,strlen(strImg));
+					//}
+					//CloseHandle(hFileFind);
+
+                    if(FileExistsA(strImg))
+                    {
+                        memset(strImg, 0, MAX_PATH);
 						sprintf(strImg, "file://%s/hidden/%s/default_wall.png", m_curDevice.deviceName,wfd.cFileName);
 						mbstowcs(pGlist->strWallPath,strImg,strlen(strImg));
-					}
-					CloseHandle(hFileFind);
+                    }
+                    else
+                    {
+                        findAll = false;
+                    }
 
 					CHAR   strIco[MAX_PATH];
 					memset(strIco, 0, MAX_PATH);
 					sprintf(strIco, "%s\\hidden\\%s\\default_ico.png", m_curDevice.deviceName,wfd.cFileName);
 
-					hFileFind = CreateFile( strIco, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
-					if( hFileFind = INVALID_HANDLE_VALUE )
-					{
-						findAll = false;
-					}
-					else
-					{
+					//hFileFind = CreateFile( strIco, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );    
+					//if( hFileFind = INVALID_HANDLE_VALUE )
+					//{
+					//	findAll = false;
+					//}
+					//else
+					//{
+					//	memset(strIco, 0, MAX_PATH);
+					//	sprintf(strIco, "file://%s/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
+					//	mbstowcs(pGlist->strIcoPath,strIco,strlen(strIco));
+					//}
+					//CloseHandle(hFileFind);
+
+                    // 判断是否存在，如果不存在封面图话，将加入下载栈中 date:2010-03-12 by:EME
+                    if(FileExistsA(strIco))
+                    {
 						memset(strIco, 0, MAX_PATH);
 						sprintf(strIco, "file://%s/hidden/%s/default_ico.png", m_curDevice.deviceName,wfd.cFileName);
 						mbstowcs(pGlist->strIcoPath,strIco,strlen(strIco));
-					}
-					CloseHandle(hFileFind);
+                    }
+                    else
+                    {
+         //               DownNode *pDownNode;
+					    //pDownNode=(DownNode *)malloc( sizeof(DownNode));
+					    //memset(pDownNode, 0,  sizeof(DownNode));
 
-					memset(pGlist->strPath, 0, MAX_PATH);
-					sprintf(pGlist->strPath, "%s\\hidden\\%s\\default.xex", m_curDevice.deviceName,wfd.cFileName);
+         //               memset(pDownNode->strRemotePath, 0, MAX_PATH);
+         //               sprintf(pDownNode->strRemotePath, "%s.png", pGlist->strTitleID);
+
+         //               memset(pDownNode->strLocalPath, 0, MAX_PATH);
+         //               sprintf(pDownNode->strLocalPath, "%s\\hidden\\%s\\%s", m_curDevice.deviceName,wfd.cFileName,pDownNode->strRemotePath);
+
+         //               if(!ExtInList(pDownNode,&m_DownList))
+         //               {
+         //                   m_DownList.push_back(*pDownNode);
+         //               }
+         //               else
+         //               {
+         //                   memset(pDownNode, 0,  sizeof(DownNode));
+         //               }
+                    }
 
 					pGlist->bIsRegion = findAll;
 					//==================================== 查找是否存在游戏背景图 end ================================
@@ -760,8 +840,9 @@ class CMyMainScene : public CXuiSceneImpl
 
 	CXuiTextElement m_labelIP;
 	CXuiTextElement m_labelArcDescription;
-	
 
+    CXuiTextElement m_labelSmc;
+    CXuiTextElement m_labelSpace;
 
 	#define NONE 0
 	#define INFO 1
@@ -774,8 +855,31 @@ class CMyMainScene : public CXuiSceneImpl
 		XUI_ON_XM_KEYDOWN( OnKeyDown ) 
 		XUI_ON_XM_NOTIFY_SELCHANGED( OnNotifySelChanged )
 		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
+        XUI_ON_XM_TIMER( OnTimer )
 	XUI_END_MSG_MAP()
 
+    HRESULT OnTimer( XUIMessageTimer *pTimer, BOOL& bHandled )
+    {
+        WCHAR strInfo[1024];
+        memset(strInfo, 0, 1024);
+        float a = 0;
+        temperaturen = &a;
+        MeinSMC.GetTemps(temperaturen,true);
+        //    temps[0] = CPU
+        //          temps[1] = GPU
+        //          temps[2] = EDRAM
+        //          temps[3] = MB
+        swprintf(strInfo, L"CPU: %.1f, GPU: %.1f",temperaturen[0],temperaturen[1],temperaturen[2],temperaturen[3]);
+        m_labelSmc.SetText(strInfo);
+
+        // 设置LED灯,温度过高时,显示：红红红绿
+        if(temperaturen[1] > 30)
+        {
+            MeinSMC.SetLEDS(RED,RED,RED,GREEN);  
+        }
+
+	    return S_OK;
+    }
 
 	//--------------------------------------------------------------------------------------
 	// Name: RefreshPageInfo
@@ -813,9 +917,6 @@ class CMyMainScene : public CXuiSceneImpl
 	BOOL MountDevice(WCHAR* deviceNameW)
 	{
 		bool isOk = false;
-		// 挂载Lib支持的6个分区
-		//DeviceMgrLib::MapExternalDrives();
-
 		int nCount = sizeof(m_DeviceMappings)/sizeof(m_DeviceMappings[0]);
 		for (int i = 0; i < nCount; i++)
 		{
@@ -832,14 +933,33 @@ class CMyMainScene : public CXuiSceneImpl
 			m_curDevice = m_DeviceMappings[0];
 		}
 
-
 		LoadList();
 		SortList(1);		// 排序
 		RefreshPageInfo();
 		
 		memset(m_ConfigNode.strDevice,0,MAX_PATH); 
 		wcsncat_s(m_ConfigNode.strDevice,m_curDevice.deviceNameW,wcslen(m_curDevice.deviceNameW));
-		
+
+        // 显示当前设备的容量信息
+	    ULARGE_INTEGER FreeBytesAvailable;
+	    ULARGE_INTEGER TotalNumberOfBytes;
+	    ULARGE_INTEGER TotalNumberOfFreeBytes;
+        WCHAR strInfo[1024];
+        char szDir[MAX_PATH];
+        memset(szDir, 0, MAX_PATH);
+        sprintf(szDir, "%s\\", UnicodeToAnsi(deviceNameW));
+	    GetDiskFreeSpaceEx(szDir,&FreeBytesAvailable,&TotalNumberOfBytes,&TotalNumberOfFreeBytes);
+	
+	    if (TotalNumberOfBytes.QuadPart > 1024*1024*1024)
+	    {
+            swprintf(strInfo, L"%s %0.1fGb of %0.1fGb free",deviceNameW,(float)(TotalNumberOfFreeBytes.QuadPart)/(1024.0f*1024.0f*1024.0f),(float)(TotalNumberOfBytes.QuadPart)/(1024.0f*1024.0f*1024.0f));
+	    } 
+        else 
+        {
+		    swprintf(strInfo,L"%s %0.1fMb of %0.1fMb free",deviceNameW,(float)(TotalNumberOfFreeBytes.QuadPart)/(1024.0f*1024.0f),(float)(TotalNumberOfBytes.QuadPart)/(1024.0f*1024.0f));
+	    }
+		m_labelSpace.SetText(strInfo);
+
 		return isOk;
 	}
 
@@ -849,7 +969,6 @@ class CMyMainScene : public CXuiSceneImpl
 	//--------------------------------------------------------------------------------------
 	VOID SetGameWall()
 	{
-		//m_labelArcName.SetText(L"");
 		m_labelArcDescription.SetText(L"");
 
 		if(m_ConfigNode.nGameType == 0)
@@ -1040,7 +1159,6 @@ class CMyMainScene : public CXuiSceneImpl
 			if(ret == 0)
 			{
 				// 解析xml，读取信息
-				//ATG::XMLParser parser;
 				ATG::XmlFileParser xmlFile;
 				ArcadeInfo ArcadeInfoNode;						// 当前选中的arc信息
 				//parser.RegisterSAXCallbackInterface( &xmlFile );
@@ -1055,10 +1173,6 @@ class CMyMainScene : public CXuiSceneImpl
 					m_Value.SetText(ArcadeInfoNode.strName );
 					m_labelArcDescription.SetText(ArcadeInfoNode.strDescription);
 				}
-				//else
-				//{
-				//	m_GameIcoImage.SetImagePath(L"");
-				//}
 				m_GameImage.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\arcade.jpg");
 			}
 		}
@@ -1118,12 +1232,11 @@ class CMyMainScene : public CXuiSceneImpl
 		GetChildById( L"labelB", &m_labelB );
 		GetChildById( L"labelY", &m_labelY );
 
-		//GetChildById( L"labelArcName", &m_labelArcName );
 		GetChildById( L"labelIP", &m_labelIP );
 		GetChildById( L"labelArcDescription", &m_labelArcDescription );
-
-
-
+        GetChildById( L"labelSmc", &m_labelSmc );
+        GetChildById( L"labelSpace", &m_labelSpace );
+        
 		m_ImageA.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\A.png");
 		m_ImageB.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\B.png");
 		m_ImageLB.SetImagePath(L"file://game:/media/XuiLocale.xzp#Media\\Xui\\LB.png");
@@ -1191,6 +1304,11 @@ class CMyMainScene : public CXuiSceneImpl
 		//m_labelArcName.SetOpacity(0);
 		//m_labelArcDescription.SetOpacity(0);
 
+        // 定时刷新SMC温度信息(1秒)
+        SetTimer(0,1000);
+
+        MeinSMC.SetFanSpeed(1,FSpeed); 
+
 		return S_OK;
 	}
 
@@ -1214,7 +1332,6 @@ class CMyMainScene : public CXuiSceneImpl
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, BOOL& bHandled )
 	{
 		// edit:使用SONIC3D封装的api date:2009-12-23 by:EME
-		//launchX( m_GameList[m_nCurSel].strPath, 0 );
 		if( hObjPressed == m_List )
 		{
 			bHandled = TRUE;
@@ -1227,7 +1344,6 @@ class CMyMainScene : public CXuiSceneImpl
 			{
 				launchX("dice:\\default.xex");
 			}
-			//DeviceMgrLib::LaunchExternalImage(m_GameList[m_nCurSel].strPath,0);
 		}
 		else if( hObjPressed == m_listDevice )
 		{
@@ -1298,11 +1414,13 @@ class CMyMainScene : public CXuiSceneImpl
 					}
 					m_WallImage.SetImagePath(m_GameList[m_nCurSel].strWallPath);
 					break;
-				case 5:				// 返回XDK界面
+               case 5:				// 设置风扇速度
+					break;
+				case 6:				// 返回XDK界面
 					SaveConfig();
 					launchX( XLAUNCH_KEYWORD_DEFAULT_APP );
 					break;
-				case 6:				// 返回DASH界面
+				case 7:				// 返回DASH界面
 					SaveConfig();
 					launchX( XLAUNCH_KEYWORD_DASH);
 					break;
@@ -1411,7 +1529,6 @@ class CMyMainScene : public CXuiSceneImpl
 				// 返回主菜单
 				if ( pInputData->dwKeyCode == VK_PAD_B)
 				{
-
 					m_ImageB.SetOpacity(1);
 					m_labelB.SetOpacity(1);
 
@@ -1455,6 +1572,46 @@ class CMyMainScene : public CXuiSceneImpl
 					m_listMenu.SetOpacity(0);
 					m_List.SetFocus(XUSER_INDEX_ANY);
 				}
+
+                // 设置风扇速度
+                if ( m_listMenu.GetCurSel() == 5)
+                {
+                    int OldSpeed = FSpeed; 
+                    if ( pInputData->dwKeyCode == VK_PAD_DPAD_LEFT)
+                    {
+                        FSpeed += 5;
+                        if(FSpeed > 100)
+                        {
+                            FSpeed = 100;
+                        }
+                    }
+                    else if ( pInputData->dwKeyCode == VK_PAD_DPAD_RIGHT)
+                    {
+                        FSpeed -= 5;
+                         if(FSpeed < 0)
+                        {
+                            FSpeed = 0;
+                        }
+                    }
+
+                    if(OldSpeed != FSpeed)
+                    {
+                        MeinSMC.SetFanSpeed(1,FSpeed); 
+                        WCHAR strInfo[256];
+                        swprintf(strInfo, L"+风扇速度[%d%%]-",FSpeed);
+                        m_listMenu.SetText(5,strInfo);
+                    }
+
+                    // if (FSpeed <= 40) 
+                    //{ 
+                    //        SpeedText = sprintfa(L"Auto"); 
+                    //} 
+                    //else 
+                    //{ 
+                    //        SpeedText = sprintfa(L"%d%%", FSpeed); 
+                    //} 
+  
+                }
 			}
 			else if(languageItemCtrl == languageItemCtrl.GetFocus(XUSER_INDEX_ANY))
 			{
@@ -1483,7 +1640,6 @@ class CMyMainScene : public CXuiSceneImpl
 					m_ImageY.SetOpacity(0);
 					m_labelY.SetOpacity(0);
 
-					//m_panelMenu.SetOpacity(1);
 					m_listMenu.SetOpacity(1);
 					m_listMenu.SetFocus(XUSER_INDEX_ANY);
 					break;
@@ -1559,13 +1715,13 @@ class CMyMainScene : public CXuiSceneImpl
 				m_nManagerOption = NONE;
 				m_labelValueInfo.SetOpacity(0);
 				m_panelMenu.SetOpacity(0);
-				//m_listMenu.SetOpacity(1);
 				m_List.SetFocus(XUSER_INDEX_ANY);
 			}
 		}
 		bHandled = true;
 		return S_OK;
 	}
+
 
 public:
 
@@ -1681,14 +1837,34 @@ HRESULT CMyApp::Render()
 
 }
 
-//--------------------------------------------------------------------------------------
-// Name: main()
-// Desc: 主函数，程序的入口处
-//--------------------------------------------------------------------------------------
-VOID __cdecl main()
+
+void MountAll()
 {
-	// 挂载全部的设备
-	//DeviceMgrLib::MapExternalDrives();
+	m_DeviceMappings[0].isSuccess = (Mount( "Devkit","\\Device\\Harddisk0\\Partition1\\Devkit") == S_OK);
+	m_DeviceMappings[1].isSuccess = (Mount( "Hdd","\\Device\\Harddisk0\\Partition1") == S_OK);
+	m_DeviceMappings[2].isSuccess = (Mount( "Usb0","\\Device\\Mass0") == S_OK);
+	m_DeviceMappings[3].isSuccess = (Mount( "Usb1","\\Device\\Mass1") == S_OK);
+	m_DeviceMappings[4].isSuccess = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
+	m_DeviceMappings[5].isSuccess = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
+	m_DeviceMappings[6].isSuccess = (Mount( "Flash","\\Device\\Flash") == S_OK);
+	m_DeviceMappings[7].isSuccess = (Mount( "HddX","\\Device\\Harddisk0\\SystemPartition") == S_OK);
+}
+
+bool InitNetwork()
+{
+	DWORD dwStatus = XNetGetEthernetLinkStatus();
+	int m_bIsOnline = ( dwStatus & XNET_ETHERNET_LINK_ACTIVE ) != 0;
+
+	if( !m_bIsOnline )
+	{
+		return false;
+	}
+
+	DWORD dwRet;
+	do
+	{
+		dwRet = XNetGetTitleXnAddr( &m_xnaddr );
+	} while( dwRet == XNET_GET_XNADDR_PENDING );
 
 	XNetStartupParams xnsp;
 	memset(&xnsp, 0, sizeof(xnsp));
@@ -1696,41 +1872,33 @@ VOID __cdecl main()
 	xnsp.cfgFlags = XNET_STARTUP_BYPASS_SECURITY;
 
 	INT iResult = XNetStartup( &xnsp );
-
 	if( iResult != NO_ERROR )
-	   printf("XNETSTARTUP ERROR\n");
-
-	// Start up Winsock
-	WORD wVersion = MAKEWORD( 2, 2 );   // request version 2.2 of Winsock
-	WSADATA wsaData;
-
-	INT err = WSAStartup( wVersion, &wsaData );
-	if( err != 0 )
 	{
-		ATG::FatalError( "WSAStartup failed, error %d.\n", err );
+		return false;
 	}
 
-	// Verify that we got the right version of Winsock
-	if( wsaData.wVersion != wVersion )
+	WSADATA WsaData;
+	iResult = WSAStartup( MAKEWORD( 2, 2 ), &WsaData );
+	if( iResult != NO_ERROR )
 	{
-		ATG::FatalError( "Failed to get proper version of Winsock, got %d.%d.\n",LOBYTE( wsaData.wVersion ), HIBYTE( wsaData.wVersion ) );
+		return false;
 	}
 
-	DWORD   hddexist = (Mount( "Hdd","\\Device\\Harddisk0\\Partition1") == S_OK);
-	hddexist = (Mount( "Devkit","\\Device\\Harddisk0\\Partition1\\Devkit") == S_OK);
-	hddexist = (Mount( "Usb0","\\Device\\Mass0") == S_OK);
-	hddexist = (Mount( "Usb1","\\Device\\Mass1") == S_OK);
-	hddexist = (Mount( "Usb2","\\Device\\Mass2") == S_OK);
-	hddexist = (Mount( "Dvd","\\Device\\Cdrom0") == S_OK);
-	hddexist = (Mount( "Flash","\\Device\\Flash") == S_OK);
-	hddexist = (Mount( "HddX","\\Device\\Harddisk0\\SystemPartition") == S_OK);
-	
+	return true;
+}
 
-	DWORD dwRet;
-	do
-	{
-		dwRet = XNetGetTitleXnAddr( &m_xnaddr );
-	} while( dwRet == XNET_GET_XNADDR_PENDING );
+
+//--------------------------------------------------------------------------------------
+// Name: main()
+// Desc: 主函数，程序的入口处
+//--------------------------------------------------------------------------------------
+VOID __cdecl main()
+{
+	_unlink("game:\\debug.log");
+	_unlink(m_strConfigPath);
+
+	InitNetwork();
+	MountAll();
 
 	CFtpServer FtpServer;
 	// 数据socket端口[1025,9000]
@@ -1760,10 +1928,8 @@ VOID __cdecl main()
 	m_ConfigNode.nShowNewWall = 0;
 	m_ConfigNode.nGameType = 0;
 
-
 	// add:读取配置文件 date:2009-12-30 by:chengang
 	LoadConfig();
-
 
 	// 注册字体文件
 	hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xarialuni.ttf" );
@@ -1829,36 +1995,256 @@ VOID __cdecl main()
 
 	// add:初始化编码 date:2009-12-29 by:EME
 	CP_Init(m_ConfigNode.nOemCode);
-
-
-	// edit:仅支持720p分辨率 date:2010-01-13 by:EME
-    // 根据不同分辨率载入相应的场景文件.
-	XVIDEO_MODE VideoMode; 
-	HXUIOBJ hScene;
-	XMemSet( &VideoMode, 0, sizeof(XVIDEO_MODE) ); 
-	XGetVideoMode( &VideoMode );
-	
-	//if(VideoMode.dwDisplayHeight == 768 && VideoMode.dwDisplayWidth == 1024)
-	//{
-	//	m_nPageSize = 15;
-	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main_1024768.xur", &hScene );
-	//}
-	//else// if(VideoMode.dwDisplayHeight < 1080)
-	//{
-	//	m_nPageSize = 13;
-	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", &hScene );
-	//}
-	//else
-	//{
-	//	m_nPageSize = 20;
-	//	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_1080.xur", &hScene );
-	//}
 	
 	m_nPageSize = 13;
-	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );
+	app.LoadFirstScene( L"file://game:/media/XuiLocale.xzp#Media\\Xui\\", L"XuiLocale_main.xur", NULL );    
+
+
+
+    // 下载线程
+    DWORD dwThreadId, dwThrdParam = 1; 
+    HANDLE hDownThread = CreateThread( 
+    NULL,                             // (this parameter is ignored)
+    0,                                  // use default stack size  
+    DownFileThread,             // thread function 
+    NULL,                            // argument to thread function 
+    0,                                  // use default creation flags 
+    &dwThreadId);               // returns the thread identifier 
 
 	app.Run();
 
 	FtpServer.StopListening();
 	app.Uninit();
+}
+
+
+
+
+/**********************************************************
+函名名称: DownFileThread
+描    述: 下载线程
+输入参数: LPVOID pAram			传进来的指针参数(基本是要操作的对象指针)
+输出参数: 
+返 回 值: DWORD  (返回执行状态)
+**********************************************************/
+DWORD WINAPI DownFileThread(LPVOID pAram)
+{
+
+	CFtpClient* pFtpClient = &m_ftpClient;							// 上传操作对象指针
+	SOCKET* pSockDate = &m_sockDateDownT;				// 数据传送socket
+	SOCKET* pSockClient = &m_sockClientDownT;			// 命令socket
+    string strValue,strTmp;
+    FILE *ofp = NULL;
+
+    *pSockClient = pFtpClient->ConnectFtp("192.168.73.1", 23, "test", "test");															// 连接FTP服务器
+    int SIZE = pFtpClient->m_nSIZE;
+
+	while(!*pSockClient)
+    {
+        Sleep(5000);
+        *pSockClient = pFtpClient->ConnectFtp("192.168.73.1", 23, "test", "test");															// 连接FTP服务器
+    }
+
+    while(true)
+    {
+	    try
+	    {
+            while(m_DownList.size() == 0)
+            {
+                Sleep(5000);
+            }
+		    
+		    int iCount;
+		    long nFileSize = 0,nDownFileSize = 0;
+
+		    if(!*pSockClient)
+		    {
+                *pSockClient = pFtpClient->ConnectFtp("192.168.73.1", 23, "test", "test");															// 连接FTP服务器
+                if(!*pSockClient)
+                {
+			        goto end;
+                }
+		    }
+
+            if(ofp != NULL)
+            {
+                fclose(ofp);
+            }
+            DownNode itemNode = m_DownList[0];
+            m_DownList.pop_back();
+
+            ofp = fopen(itemNode.strLocalPath,"wb");
+            if(ofp==NULL)
+            {
+                goto end;
+            }
+
+		    long nCode = pFtpClient->SendCommand(*pSockClient, "REST", "0");
+		    if (nCode == 202 || nCode != 350)				// 202 未执行命令，站点上的命令过多
+		    {
+			    Sleep(500);
+			    goto end;
+		    }
+
+		    nCode = pFtpClient->SendCommand(*pSockClient, "REST", "100");
+		    if (nCode == 202 || nCode != 350)				// 202 未执行命令，站点上的命令过多
+		    {
+			    Sleep(500);
+			    goto end;
+		    }
+
+            nCode = pFtpClient->SendCommand(*pSockClient, "CWD", itemNode.strRemotePath);
+		    if (nCode == 202 )						// 202 未执行命令，站点上的命令过多
+		    {
+			    Sleep(500);
+			    goto end;
+		    }
+		    //else if(nCode != 250 )					// 设置服务器工作目录
+		    //{
+			   // strTmp = strObject;
+      //          while (strObject.length()> 0) 
+			   // {
+				  //  if (strObject.find('/') <= 0)
+				  //  {
+					 //   strObject += "/";
+				  //  }
+      //              strTmp = strObject.substr(0,strObject.find('/')+1);
+				  //  nCode = pFtpClient->SendCommand(*pSockClient, "CWD", strTmp);
+				  //  if (nCode == 202 || nCode != 250 )						// 202 未执行命令，站点上的命令过多 // 路径不存在
+				  //  {
+					 //   Sleep(500);
+					 //   goto end;
+				  //  }
+      //              strObject = strObject.substr(strObject.find('/') + 1, strObject.length());
+			   // }
+		    //}
+
+		    // 记录要下载的文件的总大小
+		    nCode = pFtpClient->SendCommand(*pSockClient, "SIZE", itemNode.strRemotePath);
+		    if(nCode != 213)						// 发送请求，得到要下载文件的大小
+		    {
+			    goto end;
+		    }
+		    else
+		    {
+			    if (pFtpClient->m_strRecvLastInfo.length() < 4)
+			    {
+				    Sleep(200);
+				    goto end;
+			    }
+
+			    // 获取文件大小
+			    string temp;
+                temp = pFtpClient->m_strRecvLastInfo.substr(4, pFtpClient->m_strRecvLastInfo.length() - 4);
+			    string str = pFtpClient->m_strRecvLastInfo.substr(4, pFtpClient->m_strRecvLastInfo.length() - 6);
+                nFileSize = atoi(temp.c_str());
+
+			    if(nFileSize <= 0)
+			    {
+				    Sleep(200);
+				    goto end;
+			    }
+		    }
+
+            // 通知服务器传输的方式(返回:是否定位出错)
+            // 发送连接请求，确认连接方式,得到数据通道的连接
+		    if(!pFtpClient->SendCommand(*pSockClient, "TYPE", "I", 200) || !pFtpClient->SendCommand(*pSockClient, "PASV", "", 227))	
+		    {
+			    goto end;
+		    }
+
+		    // 数据传送socket
+		    *pSockDate = pFtpClient->GetConnect(pFtpClient->GetHost(pFtpClient->m_strRecvLastInfo),pFtpClient->GetPort(pFtpClient->m_strRecvLastInfo));
+		    if(!pFtpClient->SetFilePos(*pSockClient,0) || !pFtpClient->SendCommand(*pSockClient, "RETR", itemNode.strRemotePath, 150))													// 定位下载位置(重新下载) // 发送下载文件请求
+		    {
+                goto end;
+		    }
+            
+            fseek(ofp,0x00,SEEK_SET);
+
+		    long refilesize = nFileSize - nDownFileSize;												// 记录剩余的文件大小
+		    TCHAR *szBuf = new TCHAR[SIZE];																// 定义缓存空间
+		    memset(szBuf, 0, SIZE);
+		    while(iCount = recv(*pSockDate, (char FAR *)szBuf, SIZE, 0))
+		    {
+                fwrite(szBuf ,1,iCount,ofp);
+			    //pFile->Write(szBuf,iCount);		
+			    refilesize -= iCount;																	// 记录剩余的文件大小
+			    nFileSize += iCount;																	// 记录已经下载了多少
+		    }
+		    // 操作完成，善后工作
+		    delete [] szBuf;
+
+	    }
+	    catch (...)
+	    {
+	    }
+
+    end:
+        {
+		    // 关闭SOCKET
+		    shutdown(*pSockDate, SD_RECEIVE);
+		    closesocket(*pSockDate);
+		    closesocket(*pSockClient);	
+            fclose(ofp);
+            ofp = NULL;
+        }
+    }
+	
+	return 0;
+}
+
+void XEXParse(GameNode * item)
+{
+    WCHAR strPath[256];
+
+
+	swprintf(strPath, L"%s", item->strPath);
+
+	FILE * fp  = fopen(item->strPath ,"rb");
+	if (!fp)
+		return;
+
+	fseek(fp,0x14,SEEK_SET);
+	int temp = 0;
+	fread(&temp,4,1,fp);
+
+	if (temp > 50)
+	{
+		fclose(fp);
+		return;
+	}
+
+	xex_rec * recs = new xex_rec[temp];
+	fread(recs,sizeof(xex_rec),temp,fp);
+
+	int headeraddy = 0;
+	for (int i = 0 ; i < temp ; i++)
+	{
+		if (recs[i].var1 == 0x00040006)
+		{
+			headeraddy = recs[i].var2;
+		}
+	}
+
+	if (headeraddy > 0x30000 || headeraddy < 0x100)
+	{
+		fclose(fp);
+		return;
+	}
+	fseek(fp,headeraddy,SEEK_SET);
+
+	header_1 header;
+	fread(&header,sizeof(header),1,fp);
+
+	//DebugMsg("Got %08x, %08x, version %d, %d, Disk %d of %d",header.mediaid, header.titleid, header.version1, header.version2, header.diskno, header.diskcount);
+
+    swprintf(item->strTitleID, L"%08X", header.mediaid);
+	//item->strTitleID = sprintfa(L"%08x",header.titleid);
+	//item = sprintfa(L"%08x",header.mediaid);
+	//item->version = header.version1;
+	//item->discno = header.diskno;
+	//item->disccn = header.diskcount;
+
+	fclose(fp);
 }

@@ -10,7 +10,10 @@
 #define Utility_H
 
 #include "..\DeviceMgrLib\DeviceMgrLib.h"
+#include <string>
+#include <vector>
 
+using namespace std;
 
 union uDate
 {   
@@ -19,6 +22,11 @@ union uDate
 };  
 
 
+struct DownNode
+{
+    CHAR	strLocalPath[MAX_PATH];
+    CHAR	strRemotePath[MAX_PATH];
+};
 
 //*========================================================================//
 //	Name	:	CP_Init
@@ -71,4 +79,10 @@ extern LPWSTR StrAdd(LPCWSTR s1,LPCWSTR s2);
 extern UINT ReadUInt32(CHAR* buff);
 
 extern VOID RefashDevice();
+
+extern string& replace_all(string& str,const string& old_value,const string& new_value) ;
+
+extern int FileExistsA(const CHAR* file);
+
+extern bool ExtInList(DownNode* ext, vector<DownNode>* filetypes);
 #endif

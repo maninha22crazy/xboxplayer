@@ -22,7 +22,7 @@
 			ConfigurationType="1"
 			UseOfMFC="-1"
 			UseOfATL="0"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -451,6 +451,7 @@
 			/>
 			<Tool
 				Name="VCX360ImageTool"
+				AdditionalOptions="/privilege:6"
 				ProjectDefaults=""
 				AdditionalSections=""
 			/>
@@ -652,7 +653,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Build XUI project files"
-						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\ko-kr\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx Media\xui\A.png Media\xui\B.png Media\xui\Y.png Media\xui\B.png Media\xui\LB.png Media\xui\B.png Media\xui\RB.png Media\xui\B.png Media\xui\BottomImage.png Media\xui\arcade.jpg"
+						CommandLine="xuipkg /nologo /d /a &quot;$(OutDir)\media\XuiLocale.xzp&quot; Media\xui\XuiLocale_main.xui Media\xui\simple_scene_skin.xui Media\xui\en-en\XuiLocale_main.resx Media\xui\ja-jp\XuiLocale_main.resx Media\xui\ko-kr\XuiLocale_main.resx Media\xui\zh-chs\XuiLocale_main.resx Media\xui\zh-cht\XuiLocale_main.resx Media\xui\A.png Media\xui\B.png Media\xui\Y.png Media\xui\B.png Media\xui\LB.png Media\xui\B.png Media\xui\RB.png Media\xui\B.png Media\xui\BottomImage.png Media\xui\arcade.jpg&#x0D;&#x0A;"
 						Outputs="$(OutDir)\media\XuiLocale.xzp"
 					/>
 				</FileConfiguration>
@@ -716,6 +717,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CFtpClient.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CFtpServer.h"
 				>
 			</File>
@@ -736,6 +741,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cthread.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Externs.h"
 				>
 			</File>
@@ -752,6 +761,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\smc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Tools.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Utility.h"
 				>
 			</File>
@@ -764,6 +781,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CFtpClient.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CFtpServer.cpp"
 				>
 			</File>
@@ -773,6 +794,14 @@
 			</File>
 			<File
 				RelativePath=".\HttpClient.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\smc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Tools.cpp"
 				>
 			</File>
 			<File

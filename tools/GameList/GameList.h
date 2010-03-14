@@ -59,6 +59,7 @@ static const UINT nStart = 0xe000;						// 读取位置
 
 WCHAR m_lpImgPathBuf[MAX_PATH];
 
+
 /**--------------------------------------------------------------------------------------
  * LoadGameList - 当前目录下的Hidden目录下的第一层目录加载都向量列表里
  * @m_GameList: 游戏列表数组
@@ -75,6 +76,8 @@ VOID LoadGameList();
 VOID LoadXblaList();
 
 VOID LoadList();
+
+void XEXParse(GameNode * item);
 
 /**--------------------------------------------------------------------------------------
  * getGameTitle - 游戏文件说明

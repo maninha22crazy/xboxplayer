@@ -12,7 +12,7 @@ DWORD WINAPI HttpSendCommand( LPVOID lpParameter );
 
 DWORD WINAPI HttpSendCommand( LPVOID lpParameter )
 {
-    OutputDebugString( "HttpSendCommand\n" );
+    OutputDebugString( L"HttpSendCommand\n" );
 
     HttpClient* pHttpClient = ( HttpClient* )lpParameter;
 

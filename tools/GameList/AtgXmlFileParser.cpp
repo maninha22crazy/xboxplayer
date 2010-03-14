@@ -126,8 +126,8 @@ namespace ATG
 
 	VOID XmlFileParser::Error( HRESULT hError, const CHAR* strMessage )
 	{
-		OutputDebugString( strMessage );
-		OutputDebugString( "\n" );
+		//OutputDebugString( strMessage );
+		//OutputDebugString( "\n" );
 		strcpy_s( g_strParseError, strMessage );
 	}
 
@@ -300,6 +300,7 @@ namespace ATG
 		else if(_wcsicmp(strName,L"wallPath") == 0)
 		{
 			wcsncpy_s( m_ConfigNode.strWallPath,strValue,wcslen(strValue));
+
 		}
 		else if(_wcsicmp(strName,L"gametype") == 0)
 		{
